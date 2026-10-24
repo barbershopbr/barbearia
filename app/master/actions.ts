@@ -4,8 +4,10 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { masterBasePath } from "@/lib/tenant/master-base-path";
 import type { ActionState } from "../sites/[slug]/area-cliente/actions";
+import { dentroDoLimite, MSG_LIMITE } from "@/lib/seguranca/limite";
 
 export async function signInMaster(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  if (!(await dentroDoLimite("login-master", 5, 900))) return { error: MSG_LIMITE };
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
 

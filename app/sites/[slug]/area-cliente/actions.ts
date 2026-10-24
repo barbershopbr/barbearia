@@ -9,6 +9,7 @@ import { tenantOrigin } from "@/lib/tenant/domain";
 import { tenantBasePath } from "@/lib/tenant/base-path";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import { sendEmail, emailLayout, escapeHtml } from "@/lib/email/send";
+import { dentroDoLimite, MSG_LIMITE } from "@/lib/seguranca/limite";
 
 export type ActionState = { error?: string; success?: string } | null;
 
@@ -19,6 +20,7 @@ async function getEmpresaIdAtivaBySlug(slug: string) {
 }
 
 export async function signUpCliente(slug: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+  if (!(await dentroDoLimite("cadastro-cliente", 5, 3600))) return { error: MSG_LIMITE };
   const nome = String(formData.get("nome") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const telefone = String(formData.get("telefone") ?? "").trim() || null;
@@ -66,6 +68,7 @@ export async function signUpCliente(slug: string, _prev: ActionState, formData: 
 }
 
 export async function signInCliente(slug: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+  if (!(await dentroDoLimite("login-cliente", 10, 600))) return { error: MSG_LIMITE };
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
 
@@ -89,6 +92,7 @@ export async function signOutCliente(slug: string) {
 }
 
 export async function requestPasswordReset(slug: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+  if (!(await dentroDoLimite("reset-senha", 5, 3600))) return { error: MSG_LIMITE };
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const generic: ActionState = { success: "Se este e-mail estiver cadastrado, enviaremos as instruções de redefinição." };
 

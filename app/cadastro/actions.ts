@@ -6,6 +6,7 @@ import { criarEmpresaComResponsavel, motivoSlugInvalido, slugDisponivel } from "
 import { tenantOrigin } from "@/lib/tenant/domain";
 import { sendEmail, emailLayout, escapeHtml } from "@/lib/email/send";
 import type { PlanoSaas } from "@/lib/supabase/types";
+import { dentroDoLimite, MSG_LIMITE } from "@/lib/seguranca/limite";
 
 export type CadastroState = { error?: string; campo?: string } | null;
 
@@ -24,6 +25,7 @@ export async function checarSlug(slug: string): Promise<{ ok: boolean; motivo?: 
  * (Etapa 2 do ESCOPO.md) — até lá, o Master acompanha os novos cadastros.
  */
 export async function cadastrarBarbearia(_prev: CadastroState, formData: FormData): Promise<CadastroState> {
+  if (!(await dentroDoLimite("cadastro-barbearia", 3, 3600))) return { error: MSG_LIMITE };
   const nome = String(formData.get("nome") ?? "").trim();
   const slug = String(formData.get("slug") ?? "").trim().toLowerCase();
   const plano = String(formData.get("plano") ?? "") as PlanoSaas;

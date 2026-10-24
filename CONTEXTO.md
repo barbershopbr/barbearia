@@ -165,6 +165,13 @@ Claude Code via `CLAUDE.md`. O escopo completo do produto está em `ESCOPO.md`.
   `empresas.taxas_pagamento`. PDV: produto pode ter "vendido por" (comissão de produto).
 - Atenção em scripts: insert em lote no PostgREST com colunas diferentes por linha manda null.
 
+## Relatórios e segurança (2026-10-24)
+- Admin → Relatórios (Premium, recurso `relatorios`): `lib/relatorios/dados.ts`, CSV em
+  `/admin/relatorios/exportar` (formato Excel BR), imprimir/PDF.
+- Limite de tentativas por IP (`lib/seguranca/limite.ts`, KV prefixo `rl:`) em logins (equipe 10/10min,
+  cliente 10/10min, Master 5/15min), cadastro de cliente 5/h, autocadastro 3/h, reset de senha 5/h.
+- Cabeçalhos de segurança em next.config.ts (X-Frame-Options, nosniff, HSTS, Referrer/Permissions-Policy).
+
 ## Próximos passos
 1. **Etapa 2 (Venda do SaaS)** do `ESCOPO.md`.
 

@@ -9,8 +9,10 @@ import type { ActionState } from "../area-cliente/actions";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import { getCurrentStaff } from "@/lib/auth/current-staff";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
+import { dentroDoLimite, MSG_LIMITE } from "@/lib/seguranca/limite";
 
 export async function signInStaff(slug: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+  if (!(await dentroDoLimite("login-equipe", 10, 600))) return { error: MSG_LIMITE };
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
 
