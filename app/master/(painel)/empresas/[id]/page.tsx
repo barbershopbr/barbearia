@@ -9,6 +9,7 @@ import { DominioConfigForm } from "@/components/dominio-config-form";
 import { EmpresaStatusSelect } from "../../empresa-status-select";
 import { EmpresaDetailForm } from "./empresa-detail-form";
 import { PlanoForm } from "./plano-form";
+import { AcessoSuporteBotao, CobrancaForm } from "./suporte-cobranca";
 import { configurarDominioEmpresa, verificarDominioEmpresa, removerDominioEmpresa } from "./actions";
 
 export default async function EmpresaDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -33,6 +34,12 @@ export default async function EmpresaDetailPage({ params }: { params: Promise<{ 
 
   const receitaEstimada = (concluidos ?? []).reduce((soma, a) => soma + Number(a.servicos?.preco ?? 0), 0);
   const base = await masterBasePath();
+  const { data: faturas } = await admin
+    .from("faturas_saas")
+    .select("id, competencia, valor, vencimento, status, pago_em")
+    .eq("empresa_id", id)
+    .order("competencia", { ascending: false })
+    .limit(6);
 
   const cards = [
     { label: "Clientes", value: clientes ?? 0 },
@@ -71,6 +78,35 @@ export default async function EmpresaDetailPage({ params }: { params: Promise<{ 
           </Card>
         ))}
       </div>
+
+      <Card className="max-w-xl">
+        <CardHeader>
+          <CardTitle>Suporte e cobrança</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <AcessoSuporteBotao empresaId={empresa.id} />
+          <CobrancaForm empresaId={empresa.id} dia={empresa.saas_dia_vencimento} isentoAte={empresa.saas_isento_ate} />
+          {empresa.status === "bloqueado" && (
+            <p className="text-sm text-destructive">
+              Bloqueada {empresa.bloqueio_motivo === "inadimplencia" ? "por atraso (desbloqueia ao pagar)" : "manualmente"}.
+            </p>
+          )}
+          <div className="divide-y text-sm">
+            {(faturas ?? []).map((f) => (
+              <div key={f.id} className="flex justify-between py-1.5">
+                <span className="capitalize">
+                  {new Date(`${f.competencia}T12:00:00Z`).toLocaleDateString("pt-BR", { month: "short", year: "numeric", timeZone: "UTC" })} · vence{" "}
+                  {f.vencimento.split("-").reverse().join("/")}
+                </span>
+                <span className={f.status === "paga" ? "text-emerald-600" : f.status === "aberta" ? "" : "text-muted-foreground"}>
+                  R$ {Number(f.valor).toFixed(2)} · {f.status}
+                </span>
+              </div>
+            ))}
+            {(faturas ?? []).length === 0 && <p className="py-1.5 text-muted-foreground">Nenhuma fatura ainda.</p>}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="max-w-xl">
         <CardHeader>

@@ -1,6 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { COOKIE_SUPORTE } from "@/lib/plataforma";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { tenantBasePath } from "@/lib/tenant/base-path";
 import type { ActionState } from "../area-cliente/actions";
@@ -20,6 +22,7 @@ export async function signInStaff(slug: string, _prev: ActionState, formData: Fo
 }
 
 export async function signOutStaff(slug: string) {
+  (await cookies()).delete(COOKIE_SUPORTE);
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
   redirect(`${await tenantBasePath(slug)}/admin/login`);

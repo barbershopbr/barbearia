@@ -136,6 +136,19 @@ Claude Code via `CLAUDE.md`. O escopo completo do produto está em `ESCOPO.md`.
   tira da receita da agenda os atendimentos cobrados no caixa.
 - Teste de actions por HTTP: FormData do encodeReply usa prefixo `_1_` (não `1_`).
 
+## Master: cobrança do SaaS, métricas e suporte (2026-10-24)
+- `faturas_saas` (uma por empresa/mês). Rotina SQL `rotina_cobranca_saas()` via **pg_cron diário 06:00**:
+  gera faturas (respeita `saas_isento_ate`), bloqueia com >10 dias de atraso (`bloqueio_motivo =
+  inadimplencia`) e desbloqueia ao pagar. Bloqueio manual do Master = `manual` (não desfaz sozinho).
+  Testada em transação com datas simuladas.
+- **Decisão provisória:** autocadastro ganha 30 dias sem fatura; barbearias existentes também
+  (até 2026-11-23). Ajustar quando houver cobrança online/decisão de teste grátis.
+- Master → Faturas (baixa manual, cancelar, rodar rotina), Métricas (MRR, ativas, cortesia, atraso,
+  uso 30 dias), e na barbearia: dia de vencimento, cortesia e **acessar como** (magic link do owner →
+  `/suporte` no subdomínio; auditoria em `master_acessos`; faixa "modo suporte").
+- Painel da barbearia: aviso de mensalidade (5 dias antes / vencida) e tela de bloqueio.
+- Contato de suporte em `lib/plataforma.ts`.
+
 ## Próximos passos
 1. **Etapa 2 (Venda do SaaS)** do `ESCOPO.md`.
 

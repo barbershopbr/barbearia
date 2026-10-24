@@ -39,5 +39,9 @@ export async function createEmpresa(_prev: ActionState, formData: FormData): Pro
 export async function updateEmpresaStatus(empresaId: string, status: EmpresaStatus) {
   await requireMaster();
   const admin = createSupabaseServiceRoleClient();
-  await admin.from("empresas").update({ status }).eq("id", empresaId);
+  // Bloqueio pelo Master é "manual": a rotina de cobrança não desbloqueia sozinha.
+  await admin
+    .from("empresas")
+    .update({ status, bloqueio_motivo: status === "bloqueado" ? "manual" : null })
+    .eq("id", empresaId);
 }

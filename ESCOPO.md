@@ -25,11 +25,11 @@ Recursos são ligados/desligados por plano (feature flags por empresa). 🆕
 
 ### Painel Master
 - ✅ Cadastro e status das barbearias.
-- 🆕 Financeiro das assinaturas: faturas, vencimentos, inadimplência.
-- 🆕 **Bloqueio automático após 10 dias de atraso**, com avisos antes
+- ✅ Financeiro das assinaturas: faturas, vencimentos, inadimplência (baixa manual; online com o MP).
+- ✅ **Bloqueio automático após 10 dias de atraso** (pg_cron), com aviso no painel; e-mails de aviso 🆕
   (vencimento próximo, no vencimento e durante o atraso).
-- 🆕 "Acessar como a barbearia" para suporte.
-- 🆕 Métricas do SaaS: MRR, novas barbearias, cancelamentos, uso.
+- ✅ "Acessar como a barbearia" para suporte (registrado).
+- ✅ Métricas do SaaS: MRR, novas barbearias, cancelamentos, uso.
 - 🆕 Cupons/indicação para barbearias que contratarem.
 - Cobrança das barbearias pela conta Mercado Pago do BarberControl.
 

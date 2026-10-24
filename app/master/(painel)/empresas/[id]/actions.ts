@@ -1,8 +1,8 @@
 "use server";
 
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
-import { requireMaster } from "@/lib/auth/current-master";
-import { invalidateDomainCache } from "@/lib/tenant/domain";
+import { getCurrentMaster, requireMaster } from "@/lib/auth/current-master";
+import { invalidateDomainCache, tenantOrigin } from "@/lib/tenant/domain";
 import { createCustomHostname, deleteCustomHostname, getCustomHostnameStatus, isCloudflareConfigured } from "@/lib/cloudflare/custom-hostnames";
 import type { ActionState } from "../../../../sites/[slug]/area-cliente/actions";
 import { PLANOS_SAAS, RECURSO_LABEL } from "@/lib/plano/recursos";
@@ -183,4 +183,39 @@ export async function removerDominioEmpresa(empresaId: string): Promise<ActionSt
   }
 
   return { success: "Domínio removido. O acesso volta a ser pelo subdomínio." };
+}
+
+/**
+ * Suporte: gera um link de uso único que abre o painel da barbearia logado
+ * como o responsável (owner). Fica registrado em master_acessos.
+ */
+export async function gerarAcessoSuporte(empresaId: string): Promise<{ url?: string; error?: string }> {
+  await requireMaster();
+  const master = await getCurrentMaster();
+  if (!master) return { error: "Sessão expirada." };
+
+  const admin = createSupabaseServiceRoleClient();
+  const [{ data: empresa }, { data: dono }] = await Promise.all([
+    admin.from("empresas").select("slug").eq("id", empresaId).maybeSingle(),
+    admin.from("usuarios_empresa").select("email").eq("empresa_id", empresaId).eq("role", "owner").eq("ativo", true).limit(1).maybeSingle(),
+  ]);
+  if (!empresa || !dono) return { error: "Barbearia sem responsável ativo." };
+
+  const { data, error } = await admin.auth.admin.generateLink({ type: "magiclink", email: dono.email });
+  if (error || !data.properties?.hashed_token) return { error: "Não foi possível gerar o acesso." };
+
+  await admin.from("master_acessos").insert({ master_admin_id: master.id, empresa_id: empresaId });
+  return { url: `${tenantOrigin(empresa.slug)}/suporte?token_hash=${encodeURIComponent(data.properties.hashed_token)}` };
+}
+
+export async function salvarCobrancaEmpresa(empresaId: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+  await requireMaster();
+  const dia = Number(formData.get("saas_dia_vencimento"));
+  const isento = String(formData.get("saas_isento_ate") ?? "").trim() || null;
+  if (!Number.isInteger(dia) || dia < 1 || dia > 28) return { error: "Dia de vencimento entre 1 e 28." };
+  if (isento && !/^\d{4}-\d{2}-\d{2}$/.test(isento)) return { error: "Data inválida." };
+  const admin = createSupabaseServiceRoleClient();
+  const { error } = await admin.from("empresas").update({ saas_dia_vencimento: dia, saas_isento_ate: isento }).eq("id", empresaId);
+  if (error) return { error: "Não foi possível salvar." };
+  return { success: "Cobrança atualizada." };
 }

@@ -79,6 +79,10 @@ export async function criarEmpresaComResponsavel(input: {
       telefone: input.telefone ?? null,
       whatsapp: input.telefone ? whatsappBR(input.telefone) : null,
       horarios: HORARIOS_PADRAO,
+      // Vencimento no dia do cadastro (até 28) e 30 dias sem fatura — enquanto a
+      // cobrança online não existe, ninguém é bloqueado sem ter como pagar.
+      saas_dia_vencimento: Math.min(new Date().getUTCDate(), 28),
+      saas_isento_ate: new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10),
     })
     .select("id")
     .single();

@@ -53,6 +53,9 @@ export type Empresa = Timestamps & {
   site_config: Record<string, unknown>;
   pagamentos_config: Record<string, unknown>;
   pote_config: Record<string, unknown>;
+  saas_dia_vencimento: number;
+  bloqueio_motivo: "inadimplencia" | "manual" | null;
+  saas_isento_ate: string | null;
   updated_at: string;
 };
 
@@ -187,6 +190,22 @@ export type NotaFiscal = Timestamps & {
   link_pdf: string | null;
   erro: string | null;
 };
+
+export type FaturaSaas = Timestamps & {
+  id: string;
+  empresa_id: string;
+  competencia: string;
+  plano: string;
+  valor: number;
+  vencimento: string;
+  status: "aberta" | "paga" | "cancelada";
+  pago_em: string | null;
+  metodo: string | null;
+  gateway_id: string | null;
+  observacao: string | null;
+};
+
+export type MasterAcesso = Timestamps & { id: string; master_admin_id: string; empresa_id: string; motivo: string | null };
 
 export type GaleriaFoto = Timestamps & {
   id: string;
@@ -460,6 +479,8 @@ export type Database = {
       notas_fiscais: TableDef<NotaFiscal>;
       pote_fechamentos: TableDef<PoteFechamento>;
       caixas: TableDef<Caixa>;
+      faturas_saas: TableDef<FaturaSaas>;
+      master_acessos: TableDef<MasterAcesso>;
       caixa_movimentos: TableDef<CaixaMovimento>;
       promocoes: TableDef<Promocao>;
     };
@@ -471,6 +492,7 @@ export type Database = {
       auth_is_staff_of: { Args: { target_empresa_id: string }; Returns: boolean };
       auth_is_owner_or_admin_of: { Args: { target_empresa_id: string }; Returns: boolean };
       auth_is_master_admin: { Args: Record<string, never>; Returns: boolean };
+      rotina_cobranca_saas: { Args: { p_hoje?: string }; Returns: { geradas: number; bloqueadas: number; desbloqueadas: number } };
       horarios_ocupados: {
         Args: { p_empresa: string; p_funcionario: string; p_inicio: string; p_fim: string };
         Returns: { data_hora_inicio: string; data_hora_fim: string }[];

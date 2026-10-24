@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { COOKIE_SUPORTE } from "@/lib/plataforma";
 import Link from "next/link";
 import { Scissors } from "lucide-react";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
@@ -8,6 +9,9 @@ import { tenantBasePath } from "@/lib/tenant/base-path";
 import { marcarTutorialVisto, signOutStaff } from "../actions";
 import { TourPainel, BotaoVerTutorial } from "@/components/tour-painel";
 import { PainelShell } from "@/components/painel-shell";
+import { AvisoMensalidade, TelaBloqueio } from "@/components/aviso-mensalidade";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { hojeNoBrasil } from "@/lib/tenant/timezone";
 import { passosTutorial } from "@/lib/painel/tutorial";
 import { tenantOrigin } from "@/lib/tenant/domain";
 import { Button } from "@/components/ui/button";
@@ -51,6 +55,7 @@ export default async function AdminPainelLayout({ children, params }: { children
   // Página fora do papel (ex.: barbeiro abrindo /admin/financeiro pela URL):
   // manda para a primeira seção liberada. O menu abaixo já esconde o resto.
   const secao = secaoDoCaminho((await headers()).get("x-pathname") ?? "");
+  const modoSuporte = (await cookies()).get(COOKIE_SUPORTE)?.value === "1";
   if (secao !== null && !podeAcessarSecao(staff, secao)) {
     const destino = secaoInicial(staff);
     redirect(`${base}/admin${destino ? `/${destino}` : ""}`);
@@ -59,6 +64,32 @@ export default async function AdminPainelLayout({ children, params }: { children
   const itens = NAV_ITEMS.filter(
     (item) => (!item.recurso || temRecurso(empresa, item.recurso)) && podeAcessarSecao(staff, item.href.replace(/^\/admin\/?/, "")),
   );
+
+  // Mensalidade do BarberControl: aviso para o responsável/admin e bloqueio.
+  const gestor = staff.role === "owner" || staff.role === "admin";
+  const supabaseFatura = await createSupabaseServerClient();
+  const { data: faturaAberta } = gestor
+    ? await supabaseFatura
+        .from("faturas_saas")
+        .select("valor, vencimento")
+        .eq("empresa_id", empresa.id)
+        .eq("status", "aberta")
+        .order("vencimento")
+        .limit(1)
+        .maybeSingle()
+    : { data: null };
+  if (empresa.status === "bloqueado") {
+    return (
+      <div className="min-h-screen bg-background p-4">
+        <TelaBloqueio motivo={empresa.bloqueio_motivo} fatura={faturaAberta} />
+        <form action={signOutStaff.bind(null, slug)} className="text-center">
+          <Button type="submit" variant="outline" size="sm">
+            Sair
+          </Button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <PainelShell
@@ -112,6 +143,12 @@ export default async function AdminPainelLayout({ children, params }: { children
         </>
       }
     >
+      {modoSuporte && (
+        <p className="mb-4 rounded-md border border-violet-500/40 bg-violet-500/10 px-3 py-2 text-sm text-violet-800 dark:text-violet-200">
+          Modo suporte do BarberControl: você está no painel como o responsável. Use &quot;Sair&quot; ao terminar.
+        </p>
+      )}
+      <AvisoMensalidade fatura={faturaAberta} hoje={hojeNoBrasil()} />
       {secao !== null && nivelSecao(staff, secao) === "ver" && (
         <p className="mb-4 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
           Você pode ver esta seção, mas não alterar. Fale com o responsável se precisar editar.
