@@ -64,10 +64,10 @@ Recursos são ligados/desligados por plano (feature flags por empresa). 🆕
 
 ### Comissões (configuradas pelo dono, por funcionário)
 - ✅ Percentual, fixo por serviço, diária, mensal.
-- 🆕 Combinação de modelos (ex.: fixo + %).
-- 🆕 % por serviço e por funcionário.
-- 🆕 % sobre venda de produtos.
-- 🆕 Opção de descontar taxa da maquininha antes de calcular.
+- ✅ Combinação de modelos (ex.: fixo + %).
+- ✅ % por serviço e por funcionário.
+- ✅ % sobre venda de produtos (quem vendeu no caixa).
+- ✅ Opção de descontar taxa da maquininha antes de calcular.
 
 ### Pote das assinaturas ✅
 Comissão dos barbeiros sobre atendimentos de clientes assinantes.

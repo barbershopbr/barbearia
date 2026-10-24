@@ -16,7 +16,7 @@ import { gerarComissaoServico } from "@/lib/comissoes/avulsa";
 export async function processarConclusao(
   admin: SupabaseClient<Database>,
   agendamento: { id: string; empresa_id: string; cliente_id: string; funcionario_id: string; servico_id: string },
-  opcoes: { valorServico?: number } = {},
+  opcoes: { valorServico?: number; metodo?: string | null } = {},
 ): Promise<void> {
   await creditarPontosAgendamento(admin, {
     empresaId: agendamento.empresa_id,
@@ -58,6 +58,8 @@ export async function processarConclusao(
     empresaId: agendamento.empresa_id,
     funcionarioId: agendamento.funcionario_id,
     valorServico,
+    servicoId: agendamento.servico_id,
     agendamentoId: agendamento.id,
+    metodo: opcoes.metodo,
   });
 }

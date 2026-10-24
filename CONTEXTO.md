@@ -159,6 +159,12 @@ Claude Code via `CLAUDE.md`. O escopo completo do produto está em `ESCOPO.md`.
 - `lista_espera`: dia sem horário → "Me avise". Cancelamento (cliente, remarcar ou equipe) chama
   `lib/agenda/lista-espera.ts` → e-mail + status avisado. Agenda do admin mostra a lista do dia.
 
+## Comissões avançadas (2026-10-24)
+- Cálculo puro em `lib/comissoes/calculo.ts` (testado). `regras_comissao` + fixo_adicional,
+  percentual_produto, descontar_taxa; exceções em `regras_comissao_servico`; taxas em
+  `empresas.taxas_pagamento`. PDV: produto pode ter "vendido por" (comissão de produto).
+- Atenção em scripts: insert em lote no PostgREST com colunas diferentes por linha manda null.
+
 ## Próximos passos
 1. **Etapa 2 (Venda do SaaS)** do `ESCOPO.md`.
 

@@ -53,6 +53,7 @@ export type Empresa = Timestamps & {
   site_config: Record<string, unknown>;
   pagamentos_config: Record<string, unknown>;
   pote_config: Record<string, unknown>;
+  taxas_pagamento: Record<string, number>;
   saas_dia_vencimento: number;
   bloqueio_motivo: "inadimplencia" | "manual" | null;
   saas_isento_ate: string | null;
@@ -389,6 +390,18 @@ export type RegraComissao = Timestamps & {
   tipo: RegraComissaoTipo;
   valor: number;
   ativo: boolean;
+  fixo_adicional: number;
+  percentual_produto: number;
+  descontar_taxa: boolean;
+};
+
+export type RegraComissaoServico = Timestamps & {
+  id: string;
+  empresa_id: string;
+  funcionario_id: string;
+  servico_id: string;
+  tipo: "percentual" | "fixo";
+  valor: number;
 };
 
 export type Despesa = Timestamps & {
@@ -507,6 +520,7 @@ export type Database = {
       notas_fiscais: TableDef<NotaFiscal>;
       pote_fechamentos: TableDef<PoteFechamento>;
       caixas: TableDef<Caixa>;
+      regras_comissao_servico: TableDef<RegraComissaoServico>;
       avaliacoes: TableDef<Avaliacao>;
       lista_espera: TableDef<ListaEspera>;
       faturas_saas: TableDef<FaturaSaas>;

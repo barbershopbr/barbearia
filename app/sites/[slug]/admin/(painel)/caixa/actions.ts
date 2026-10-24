@@ -8,7 +8,7 @@ import { getCurrentStaff } from "@/lib/auth/current-staff";
 import { exigirEdicao } from "@/lib/auth/exigir-permissao";
 import { exigirRecurso } from "@/lib/plano/recursos";
 import { baixarEstoque } from "@/lib/estoque/baixar";
-import { gerarComissaoServico } from "@/lib/comissoes/avulsa";
+import { gerarComissaoProduto, gerarComissaoServico } from "@/lib/comissoes/avulsa";
 import { processarConclusao } from "@/lib/agenda/concluir";
 import { creditarPontosPedido } from "@/lib/fidelidade/creditar";
 import type { ActionState } from "../../../area-cliente/actions";
@@ -151,7 +151,7 @@ export async function registrarVenda(slug: string, _prev: ActionState, formData:
       pagamento_id: venda.id,
       produto_id: l.tipo === "produto" ? l.id : null,
       servico_id: l.tipo === "servico" ? l.id : null,
-      funcionario_id: l.tipo === "servico" ? (l.funcionarioId ?? null) : null,
+      funcionario_id: l.funcionarioId ?? null,
       agendamento_id: l.agendamentoId ?? null,
       descricao: l.nome,
       quantidade: l.quantidade,
@@ -183,13 +183,17 @@ export async function registrarVenda(slug: string, _prev: ActionState, formData:
       if (atendimento.status !== "concluido") {
         await admin.from("agendamentos").update({ status: "concluido" }).eq("id", atendimento.id);
       }
-      await processarConclusao(admin, atendimento, { valorServico: l.preco * fator });
+      await processarConclusao(admin, atendimento, { valorServico: l.preco * fator, metodo });
       continue;
     }
     if (!l.funcionarioId) continue;
     for (let q = 0; q < l.quantidade; q++) {
-      await gerarComissaoServico(admin, { empresaId: empresa.id, funcionarioId: l.funcionarioId, valorServico: l.preco * fator });
+      await gerarComissaoServico(admin, { empresaId: empresa.id, funcionarioId: l.funcionarioId, valorServico: l.preco * fator, servicoId: l.id, metodo });
     }
+  }
+  // Produto com vendedor: comissão sobre a venda (% de produto da regra dele).
+  for (const l of linhas.filter((x) => x.tipo === "produto" && x.funcionarioId)) {
+    await gerarComissaoProduto(admin, { empresaId: empresa.id, funcionarioId: l.funcionarioId!, valorVenda: l.preco * l.quantidade * fator, metodo });
   }
   // Pontos da compra (o atendimento cobrado já pontuou pela agenda).
   if (clienteId && linhas.some((l) => !l.agendamentoId)) {
