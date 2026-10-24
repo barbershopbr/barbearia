@@ -26,6 +26,7 @@ export const SECOES: { id: string; label: string }[] = [
   { id: "fidelidade", label: "Fidelidade" },
   { id: "comissoes", label: "Comissões" },
   { id: "financeiro", label: "Financeiro" },
+  { id: "pagamentos", label: "Recebimentos (Mercado Pago)" },
   { id: "site", label: "Aparência do site" },
   { id: "dominio", label: "Domínio" },
   { id: "configuracoes", label: "Configurações" },

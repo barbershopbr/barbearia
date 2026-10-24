@@ -51,6 +51,7 @@ export type Empresa = Timestamps & {
   plano_saas: PlanoSaas;
   recursos_extras: Record<string, boolean>;
   site_config: Record<string, unknown>;
+  pagamentos_config: Record<string, unknown>;
   updated_at: string;
 };
 
@@ -315,6 +316,12 @@ export type ConfiguracaoGateway = Timestamps & {
   gateway: GatewayProvider;
   credenciais: Record<string, unknown>;
   ativo: boolean;
+  credenciais_cifradas: string | null;
+  conta_id: string | null;
+  conta_nome: string | null;
+  conectado_em: string | null;
+  expira_em: string | null;
+  atualizado_em: string;
 };
 
 export type ClientePasswordResetToken = Timestamps & {
