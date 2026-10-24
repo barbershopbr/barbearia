@@ -31,6 +31,18 @@ export const SECOES: { id: string; label: string }[] = [
   { id: "configuracoes", label: "Configurações" },
 ];
 
+/**
+ * Permissões que não são uma página do menu. "agenda-equipe": ver/editar os
+ * atendimentos de todos os profissionais — sem ela, a pessoa só enxerga e
+ * mexe na própria agenda (perfil vinculado em Funcionários).
+ */
+export const PERMISSOES_EXTRAS: { id: string; label: string }[] = [
+  { id: "agenda-equipe", label: "Agenda de toda a equipe (sem isso, só a própria)" },
+];
+
+/** Tudo que aparece no diálogo de permissões, na ordem. */
+export const ITENS_PERMISSAO = [...SECOES.slice(0, 2), ...PERMISSOES_EXTRAS, ...SECOES.slice(2)];
+
 /** Sempre liberada: cada um vê os próprios atendimentos e comissões. */
 const SECAO_PESSOAL = "meu-historico";
 
@@ -47,7 +59,7 @@ export const PAPEIS_ATRIBUIVEIS: UsuarioEmpresaRole[] = ["barbeiro", "recepcioni
 /** Modelo inicial de cada papel — o dono ajusta depois em Funcionários → Permissões. */
 export const PERMISSOES_PADRAO: Record<"barbeiro" | "recepcionista", Permissoes> = {
   barbeiro: { agenda: "editar", clientes: "ver" },
-  recepcionista: { "": "ver", agenda: "editar", clientes: "editar", pedidos: "editar", assinaturas: "ver", servicos: "ver", produtos: "ver" },
+  recepcionista: { "": "ver", agenda: "editar", "agenda-equipe": "editar", clientes: "editar", pedidos: "editar", assinaturas: "ver", servicos: "ver", produtos: "ver" },
 };
 
 type StaffPerm = Pick<UsuarioEmpresa, "role" | "permissions">;

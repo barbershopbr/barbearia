@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { PAPEIS_ATRIBUIVEIS, PAPEL_LABEL, SECOES, type Permissoes } from "@/lib/auth/papeis";
+import { ITENS_PERMISSAO, PAPEIS_ATRIBUIVEIS, PAPEL_LABEL, type Permissoes } from "@/lib/auth/papeis";
 import type { UsuarioEmpresaRole } from "@/lib/supabase/types";
 import { alterarPapel, alternarAcessoAtivo, criarAcesso, redefinirSenhaAcesso, salvarPermissoes } from "./acesso-actions";
 
@@ -235,7 +235,7 @@ function PermissoesDialog({ slug, usuarioEmpresaId, permissoes }: { slug: string
         <form action={enviar} className="space-y-3">
           <p className="text-xs text-muted-foreground">&quot;Meu histórico&quot; (próprios atendimentos e comissões) é sempre liberado.</p>
           <div className="divide-y rounded-md border">
-            {SECOES.map((s) => (
+            {ITENS_PERMISSAO.map((s) => (
               <div key={s.id} className="flex items-center justify-between gap-3 px-3 py-2">
                 <span className="text-sm">{s.label}</span>
                 <select name={`secao_${s.id}`} defaultValue={permissoes[s.id] ?? ""} className={`${SELECT} w-40`}>

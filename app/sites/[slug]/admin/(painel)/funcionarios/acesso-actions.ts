@@ -5,7 +5,7 @@ import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import { getCurrentStaff } from "@/lib/auth/current-staff";
 import { createStaffAccount } from "@/lib/auth/staff-management";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
-import { PAPEIS_ATRIBUIVEIS, SECOES } from "@/lib/auth/papeis";
+import { ITENS_PERMISSAO, PAPEIS_ATRIBUIVEIS } from "@/lib/auth/papeis";
 import type { UsuarioEmpresaRole } from "@/lib/supabase/types";
 import type { ActionState } from "../../../area-cliente/actions";
 
@@ -121,7 +121,7 @@ export async function salvarPermissoes(slug: string, usuarioEmpresaId: string, f
   let permissions: Record<string, unknown> = {};
   if (formData.get("restaurar") !== "1") {
     const secoes: Record<string, "ver" | "editar"> = {};
-    for (const { id } of SECOES) {
+    for (const { id } of ITENS_PERMISSAO) {
       const nivel = formData.get(`secao_${id}`);
       if (nivel === "ver" || nivel === "editar") secoes[id] = nivel;
     }

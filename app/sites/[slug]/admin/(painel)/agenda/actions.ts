@@ -1,6 +1,7 @@
 "use server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import { brazilDateTimeToUtc } from "@/lib/tenant/timezone";
 import { hasConflict } from "@/lib/agenda/available-slots";
@@ -8,6 +9,8 @@ import { creditarPontosAgendamento } from "@/lib/fidelidade/creditar";
 import type { ActionState } from "../../../area-cliente/actions";
 import type { AgendamentoStatus } from "@/lib/supabase/types";
 import { exigirEdicao } from "@/lib/auth/exigir-permissao";
+import { getCurrentStaff } from "@/lib/auth/current-staff";
+import { escopoAgenda, podeMexerNoProfissional } from "@/lib/auth/agenda-escopo";
 
 export async function createAgendamentoAdmin(slug: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
   await exigirEdicao("agenda");
@@ -22,6 +25,11 @@ export async function createAgendamentoAdmin(slug: string, _prev: ActionState, f
 
   if (!clienteId || !servicoId || !funcionarioId || !data || !hora) {
     return { error: "Preencha todos os campos." };
+  }
+
+  const staff = await getCurrentStaff(empresa.id);
+  if (!staff || !podeMexerNoProfissional(await escopoAgenda(staff), funcionarioId)) {
+    return { error: "Você só pode agendar na sua própria agenda." };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -59,6 +67,18 @@ export async function createAgendamentoAdmin(slug: string, _prev: ActionState, f
 export async function updateAgendamentoStatus(agendamentoId: string, status: AgendamentoStatus) {
   await exigirEdicao("agenda");
   const supabase = await createSupabaseServerClient();
+  const { data: atual } = await supabase
+    .from("agendamentos")
+    .select("empresa_id, funcionario_id")
+    .eq("id", agendamentoId)
+    .maybeSingle();
+  if (!atual) return;
+
+  const staff = await getCurrentStaff(atual.empresa_id);
+  if (!staff || !podeMexerNoProfissional(await escopoAgenda(staff), atual.funcionario_id)) {
+    throw new Error("Você só pode alterar atendimentos da sua própria agenda.");
+  }
+
   const { data: agendamento } = await supabase
     .from("agendamentos")
     .update({ status })
@@ -68,7 +88,12 @@ export async function updateAgendamentoStatus(agendamentoId: string, status: Age
 
   if (!agendamento || status !== "concluido") return;
 
-  await creditarPontosAgendamento(supabase, {
+  // A permissão sobre este atendimento já foi conferida acima. Pontos e
+  // comissão leem regras/configurações que o profissional não pode ver
+  // (RLS por seção), então o processamento automático roda como servidor.
+  const admin = createSupabaseServiceRoleClient();
+
+  await creditarPontosAgendamento(admin, {
     empresaId: agendamento.empresa_id,
     clienteId: agendamento.cliente_id,
     agendamentoId,
@@ -77,7 +102,7 @@ export async function updateAgendamentoStatus(agendamentoId: string, status: Age
   // Gera a comissão automaticamente, se o funcionário tiver uma regra ativa e
   // ainda não existir comissão lançada para este agendamento (evita duplicar
   // caso o status seja alternado entre concluído/outro mais de uma vez).
-  const { data: jaExiste } = await supabase
+  const { data: jaExiste } = await admin
     .from("comissoes")
     .select("id")
     .eq("agendamento_id", agendamentoId)
@@ -85,13 +110,13 @@ export async function updateAgendamentoStatus(agendamentoId: string, status: Age
   if (jaExiste) return;
 
   const [{ data: regra }, { data: servico }] = await Promise.all([
-    supabase
+    admin
       .from("regras_comissao")
       .select("tipo, valor")
       .eq("funcionario_id", agendamento.funcionario_id)
       .eq("ativo", true)
       .maybeSingle(),
-    supabase.from("servicos").select("preco").eq("id", agendamento.servico_id).maybeSingle(),
+    admin.from("servicos").select("preco").eq("id", agendamento.servico_id).maybeSingle(),
   ]);
 
   // Diária e salário mensal não são gerados por atendimento — o dono lança
@@ -100,7 +125,7 @@ export async function updateAgendamentoStatus(agendamentoId: string, status: Age
 
   const valorComissao = regra.tipo === "percentual" ? (Number(servico.preco) * regra.valor) / 100 : regra.valor;
 
-  await supabase.from("comissoes").insert({
+  await admin.from("comissoes").insert({
     empresa_id: agendamento.empresa_id,
     funcionario_id: agendamento.funcionario_id,
     agendamento_id: agendamentoId,

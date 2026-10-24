@@ -28,3 +28,8 @@ export function brazilDayRangeUtc(data: string): { inicio: Date; fim: Date } {
   const fim = new Date(brazilDateTimeToUtc(data, "23:59").getTime() + 59_999);
   return { inicio, fim };
 }
+
+/** "YYYY-MM-DD" de hoje no horário do Brasil (o Worker roda em UTC). */
+export function hojeNoBrasil(agora: Date = new Date()): string {
+  return new Date(agora.getTime() - BRAZIL_UTC_OFFSET_HOURS * 3_600_000).toISOString().slice(0, 10);
+}

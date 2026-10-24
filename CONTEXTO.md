@@ -66,8 +66,12 @@ Claude Code via `CLAUDE.md`. O escopo completo do produto está em `ESCOPO.md`.
   o modelo inicial (`lib/auth/papeis.ts`). Owner/admin sempre tudo.
 - Aplicação: layout do admin (menu + redirect + aviso "só ver", via header `x-pathname`
   do middleware) e `exigirEdicao(secao)` no início de toda action de escrita do admin.
-- Falta: RLS por permissão no banco (hoje qualquer staff ativo passa na RLS) e agenda do
-  barbeiro filtrada só para os próprios atendimentos.
+- **RLS por permissão** (migration 20261024000004): funções `auth_staff_nivel`/`auth_staff_pode`
+  (espelham `permissoesDe` — manter em sincronia) + policies restritivas em despesas, comissões,
+  regras, fornecedores, cupons, produtos/estoque e agendamentos. Testado com sessões reais.
+- Permissão extra `agenda-equipe`: sem ela, a pessoa só vê/mexe na própria agenda (perfil
+  vinculado). Agenda com filtro por dia/profissional e total previsto.
+- Concluir atendimento: pontos e comissão gerados com service role (após checar permissão).
 - Clientes: cadastro no balcão (com/sem e-mail), edição, busca, atendimentos/última visita.
 
 ## Próximos passos
