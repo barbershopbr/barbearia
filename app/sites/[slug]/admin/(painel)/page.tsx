@@ -60,6 +60,7 @@ export default async function AdminDashboardPage({ params }: { params: Promise<{
       .select("id", { count: "exact", head: true })
       .eq("empresa_id", empresa.id)
       .eq("tipo", "produto")
+      .eq("status", "pendente")
       .eq("separado", false),
   ]);
 

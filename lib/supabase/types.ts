@@ -19,8 +19,8 @@ export type AgendamentoStatus = "agendado" | "confirmado" | "concluido" | "cance
 export type PlanoPeriodo = "mensal" | "trimestral" | "anual";
 export type AssinaturaStatus = "ativa" | "cancelada" | "inadimplente" | "pendente";
 export type PagamentoTipo = "agendamento" | "assinatura" | "produto";
-export type PagamentoMetodo = "pix" | "cartao" | "cartao_recorrente";
-export type PagamentoStatus = "pendente" | "pago" | "falhou" | "estornado";
+export type PagamentoMetodo = "pix" | "cartao" | "cartao_recorrente" | "na_retirada";
+export type PagamentoStatus = "pendente" | "pago" | "falhou" | "estornado" | "cancelado";
 export type ComissaoTipo = "servico" | "produto" | "assinatura" | "personalizada" | "diaria" | "mensal";
 export type RegraComissaoTipo = "percentual" | "fixo_por_servico" | "diaria" | "mensal";
 export type ComissaoPeriodo = "semanal" | "quinzenal" | "mensal";
@@ -224,6 +224,7 @@ export type Pagamento = Timestamps & {
   gateway: string | null;
   gateway_transacao_id: string | null;
   separado: boolean;
+  retirado_em: string | null;
   cupom_id: string | null;
   desconto: number;
 };

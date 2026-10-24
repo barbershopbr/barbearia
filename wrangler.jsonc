@@ -13,14 +13,13 @@
   },
   // Variáveis não secretas. Chaves privadas (SUPABASE_SERVICE_ROLE_KEY,
   // RESEND_API_KEY, CLOUDFLARE_API_TOKEN) vão por `wrangler secret put`.
-  // APP_ORIGIN: deploy provisório no workers.dev (links por caminho
-  // /sites/{slug} e /master). Remover quando o DNS de usebrcontrol.com.br
-  // apontar para o Worker — aí os links passam a usar os subdomínios.
+  // APP_ORIGIN (opcional): força links por caminho (/sites/{slug}, /master)
+  // num host sem DNS próprio, como o workers.dev. Sem ele, os links usam os
+  // subdomínios de usebrcontrol.com.br.
   "vars": {
     "NEXT_PUBLIC_SUPABASE_URL": "https://ifaqsuxxrinpgzfvqvva.supabase.co",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmYXFzdXh4cmlucGd6ZnZxdnZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4Mjg2MjksImV4cCI6MjEwODQwNDYyOX0.K1LtMvj-a9sBPfuzKT7ZVrsQ_8ew-TuEdY0E91oybMM",
     "NEXT_PUBLIC_ROOT_DOMAIN": "usebrcontrol.com.br",
-    "APP_ORIGIN": "https://usebrcontrol.usebrcontrol.workers.dev",
     "CLOUDFLARE_ZONE_ID": "6be51528bd1733ef8024d0e54cb06193"
   },
   // Domínio raiz (marketing), master.* e {slug}.* — todos no mesmo Worker; o

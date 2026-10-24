@@ -23,15 +23,17 @@ Claude Code via `CLAUDE.md`. O escopo completo do produto está em `ESCOPO.md`.
   de trocar os nameservers para a Cloudflare.
 - Hospedagem: **Cloudflare**. Faltam **Mercado Pago** (etapa 2) e Resend (chave).
 
-## Deploy de teste (2026-10-24)
-- Worker `usebrcontrol` em https://usebrcontrol.usebrcontrol.workers.dev (modo por
-  caminho: `/master/login`, `/sites/{slug}`, `/sites/{slug}/admin/login`).
-- Vars públicas no `wrangler.jsonc` (inclui `APP_ORIGIN` — remover quando o DNS do
-  domínio apontar pro Worker). Secret: `SUPABASE_SERVICE_ROLE_KEY`.
+## Produção (2026-10-24)
+- **No ar em https://usebrcontrol.com.br** (DNS na Cloudflare: nameservers bill/kenia; registros A
+  proxied 192.0.2.1 no apex e em `*`; rotas do Worker `usebrcontrol.com.br/*` e `*.usebrcontrol.com.br/*`).
+  `master.usebrcontrol.com.br`, `{slug}.usebrcontrol.com.br`. workers.dev segue ativo (sem APP_ORIGIN
+  os links dele apontam para os subdomínios).
+- Secrets do Worker: `SUPABASE_SERVICE_ROLE_KEY`, `CLOUDFLARE_API_TOKEN` (token de zona: DNS,
+  Workers Routes, SSL). Não pôr esse token no .env.local (o wrangler passaria a usá-lo no deploy).
 - Deploy: `npm run cf:deploy`. Migrations: `npx supabase db push --db-url ...`
   (pooler `aws-1-sa-east-1`, usuário `postgres.ifaqsuxxrinpgzfvqvva`).
-- Contas de teste: Master `endrew.barbershop@gmail.com`; barbearia `barbearia-teste`
-  (Premium) com dono `endrew.barbershop+teste@gmail.com`. Senhas passadas no chat.
+- Contas de teste: Master `endrew.barbershop@gmail.com`; `barbearia-teste` (Premium) com dono
+  `endrew.barbershop+teste@gmail.com`. Senhas passadas no chat.
 
 ## Primeira barbearia real: Alpha Barbershop (2026-10-24)
 - Slug `alpha` (Premium), Sorocaba. Dados reais vindos do Booksy
@@ -87,6 +89,11 @@ Claude Code via `CLAUDE.md`. O escopo completo do produto está em `ESCOPO.md`.
 - `bloqueios_agenda` (profissional ou barbearia inteira; RLS: própria agenda ou agenda-equipe) e
   pausa diária em `empresas.horarios[dia].pausa_inicio/pausa_fim`. RPC `horarios_ocupados` inclui
   bloqueios; `getAvailableSlots` desconta a pausa. Alpha com almoço 13–14 (dado do Booksy).
+
+## Loja com retirada (2026-10-24)
+- Pedido: pendente (pagamento `na_retirada`) → pronto (`separado`, e-mail ao cliente) → retirado e
+  pago (`status=pago`, `retirado_em`, baixa de estoque + pontos via service role) ou cancelado.
+- Cliente vê "Meus pedidos" com a etapa. Financeiro conta venda só quando paga.
 
 ## Próximos passos
 1. **Etapa 2 (Venda do SaaS)** do `ESCOPO.md`.

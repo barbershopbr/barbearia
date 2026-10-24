@@ -10,7 +10,7 @@ const NAV_ITEMS: { href: string; label: string; recurso?: Recurso }[] = [
   { href: "/area-cliente", label: "Início" },
   { href: "/area-cliente/historico", label: "Histórico" },
   { href: "/area-cliente/produtos", label: "Produtos", recurso: "loja" },
-  { href: "/area-cliente/pagamentos", label: "Pagamentos" },
+  { href: "/area-cliente/pagamentos", label: "Pedidos" },
   { href: "/area-cliente/fidelidade", label: "Fidelidade", recurso: "fidelidade" },
 ];
 

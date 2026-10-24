@@ -150,6 +150,8 @@ export function CartWidget({ slug, loggedIn, entrarHref }: { slug: string; logge
               </div>
             </div>
 
+            <p className="text-xs text-muted-foreground">Retirada na barbearia · pagamento na hora da retirada.</p>
+
             {message && <p className={`text-sm ${isError ? "text-destructive" : "text-emerald-600"}`}>{message}</p>}
 
             {loggedIn ? (

@@ -59,7 +59,7 @@ export default async function FinanceiroPage({
       .gte("data", inicioMesStr)
       .lte("data", fimMesStr)
       .order("data", { ascending: false }),
-    // Pedido da loja conta como venda quando foi pago ou entregue (separado).
+    // Pedido da loja entra como venda quando foi pago (retirado na barbearia).
     supabase
       .from("pagamentos")
       .select("valor, status, separado")
@@ -76,7 +76,7 @@ export default async function FinanceiroPage({
   const receitaAssinaturas = (assinaturasAtivas ?? []).reduce((s, a) => s + Number(a.planos?.valor ?? 0), 0);
   const totalDespesas = (despesas ?? []).reduce((s, d) => s + Number(d.valor), 0);
   const receitaProdutos = (vendasProdutos ?? [])
-    .filter((p) => p.status === "pago" || (p.separado && p.status !== "estornado" && p.status !== "falhou"))
+    .filter((p) => p.status === "pago")
     .reduce((s, p) => s + Number(p.valor), 0);
   const receitaTotal = receitaServicos + receitaAssinaturas + receitaProdutos;
   const saldo = receitaTotal - totalDespesas;

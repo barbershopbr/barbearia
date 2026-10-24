@@ -59,7 +59,8 @@ export async function criarPedido(
       valor: valorTotal,
       desconto,
       cupom_id: cupom?.id ?? null,
-      metodo: "pix", // provisório — a escolha real de método vem com o gateway (Fase B)
+      // Retirada na barbearia, pagando lá. Pagamento online entra com o gateway.
+      metodo: "na_retirada",
       status: "pendente",
     })
     .select("id")
@@ -92,5 +93,5 @@ export async function criarPedido(
     return { error: "Não foi possível registrar os itens do pedido." };
   }
 
-  return { success: "Pedido enviado! A barbearia vai preparar e avisar quando estiver pronto." };
+  return { success: "Pedido feito! Você paga na retirada. Avisamos por e-mail quando estiver pronto." };
 }
