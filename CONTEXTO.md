@@ -149,6 +149,10 @@ Claude Code via `CLAUDE.md`. O escopo completo do produto está em `ESCOPO.md`.
 - Painel da barbearia: aviso de mensalidade (5 dias antes / vencida) e tela de bloqueio.
 - Contato de suporte em `lib/plataforma.ts`.
 
+## PWA (2026-10-24)
+- `/manifest` e `/icone` por barbearia (rotas em app/sites/[slug]; sem extensão porque o middleware
+  ignora caminhos com ponto). `public/sw.js` (sem cache de páginas; já trata push/notificationclick).
+
 ## Próximos passos
 1. **Etapa 2 (Venda do SaaS)** do `ESCOPO.md`.
 
