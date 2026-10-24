@@ -27,6 +27,7 @@ export const SECOES: { id: string; label: string }[] = [
   { id: "comissoes", label: "Comissões" },
   { id: "financeiro", label: "Financeiro" },
   { id: "pagamentos", label: "Recebimentos (Mercado Pago)" },
+  { id: "notas-fiscais", label: "Notas fiscais (Bling)" },
   { id: "site", label: "Aparência do site" },
   { id: "dominio", label: "Domínio" },
   { id: "configuracoes", label: "Configurações" },

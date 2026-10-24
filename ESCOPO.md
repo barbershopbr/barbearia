@@ -114,6 +114,11 @@ Ponto = 600 ÷ 1.450 = R$0,4138 → João R$364,14 · Pedro R$235,86.
 
 ---
 
+## 5b. Notas fiscais (Bling) 🔧
+- ✅ Conexão por OAuth (barbearia no painel, BarberControl no Master) com passo a passo.
+- 🆕 Emissão automática: NFS-e das mensalidades do SaaS; barbearia opcional para serviços,
+  assinaturas e produtos.
+
 ## 6. Notificações (e-mail + push no navegador) 🆕
 - Lembrete de horário.
 - Confirmação / alteração / cancelamento.

@@ -95,6 +95,18 @@ Claude Code via `CLAUDE.md`. O escopo completo do produto está em `ESCOPO.md`.
   pago (`status=pago`, `retirado_em`, baixa de estoque + pontos via service role) ou cancelado.
 - Cliente vê "Meus pedidos" com a etapa. Financeiro conta venda só quando paga.
 
+## Recebimentos e notas fiscais (2026-10-24)
+- **Mercado Pago (OAuth marketplace):** cada barbearia conecta a PRÓPRIA conta em Admin →
+  Recebimentos. Retorno fixo `https://usebrcontrol.com.br/api/mercadopago/callback` (state HMAC).
+  Tokens cifrados (AES-GCM, secret `APP_SECRET` do Worker — se trocar, todos reconectam).
+  Preferências em `empresas.pagamentos_config`. **Falta:** `MP_CLIENT_ID`/`MP_CLIENT_SECRET`
+  (aplicação única do BarberControl) e o fluxo de cobrança (Pix/cartão/sinal/assinatura + webhooks).
+- **Bling (notas fiscais):** opcional por barbearia (Admin → Notas fiscais, passo a passo + OAuth) e
+  conta do BarberControl no Master (notas das mensalidades). Tabelas `integracoes` (empresa_id null =
+  BarberControl) e `notas_fiscais`. Retorno `/api/bling/callback`. **Falta:** `BLING_CLIENT_ID`/
+  `BLING_CLIENT_SECRET` e a emissão em si (disparada quando os pagamentos online existirem).
+  Refresh token do Bling vence em 30 dias sem uso — prever renovação periódica (cron).
+
 ## Próximos passos
 1. **Etapa 2 (Venda do SaaS)** do `ESCOPO.md`.
 

@@ -22,6 +22,9 @@ export default async function MasterPainelLayout({ children }: { children: React
           <Link href={base === "" ? "/" : base} className="block rounded px-2 py-1.5 text-sm tracking-wide uppercase hover:bg-sidebar-accent">
             Empresas
           </Link>
+          <Link href={`${base}/notas-fiscais`} className="block rounded px-2 py-1.5 text-sm tracking-wide uppercase hover:bg-sidebar-accent">
+            Notas fiscais
+          </Link>
         </nav>
         <div className="mt-6 border-t border-sidebar-border pt-4">
           <p className="mb-2 text-xs text-sidebar-foreground/60">{master.nome}</p>

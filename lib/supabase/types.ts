@@ -151,6 +151,35 @@ export type BloqueioAgenda = Timestamps & {
   criado_por: string | null;
 };
 
+export type Integracao = {
+  id: string;
+  /** null = conta do BarberControl (Master). */
+  empresa_id: string | null;
+  provedor: "bling";
+  credenciais_cifradas: string;
+  conta_nome: string | null;
+  conectado_em: string;
+  expira_em: string | null;
+  refresh_expira_em: string | null;
+  config: Record<string, unknown>;
+  atualizado_em: string;
+};
+
+export type NotaFiscal = Timestamps & {
+  id: string;
+  empresa_id: string | null;
+  empresa_cliente_id: string | null;
+  pagamento_id: string | null;
+  tipo: "nfse" | "nfe" | "nfce";
+  provedor: string;
+  provedor_nota_id: string | null;
+  numero: string | null;
+  valor: number;
+  status: "pendente" | "emitida" | "erro" | "cancelada";
+  link_pdf: string | null;
+  erro: string | null;
+};
+
 export type GaleriaFoto = Timestamps & {
   id: string;
   empresa_id: string;
@@ -372,6 +401,8 @@ export type Database = {
       fidelidade_config: TableDef<FidelidadeConfig>;
       galeria_fotos: TableDef<GaleriaFoto>;
       bloqueios_agenda: TableDef<BloqueioAgenda>;
+      integracoes: TableDef<Integracao>;
+      notas_fiscais: TableDef<NotaFiscal>;
       promocoes: TableDef<Promocao>;
     };
     Views: {
