@@ -13,7 +13,9 @@ export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
   if (resolution.kind === "marketing") {
-    return NextResponse.next();
+    // Acesso por caminho (/sites/{slug}/...) cai aqui: repassa o caminho
+    // para o layout do admin checar a permissão por papel.
+    return NextResponse.next({ request: { headers: comCaminho(request, pathname) } });
   }
 
   if (resolution.kind === "master") {
@@ -33,7 +35,18 @@ export async function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
   url.pathname = `/sites/${resolution.slug}${pathname === "/" ? "" : pathname}`;
   url.search = search;
-  return NextResponse.rewrite(url);
+  return NextResponse.rewrite(url, { request: { headers: comCaminho(request, url.pathname) } });
+}
+
+/**
+ * Layouts do App Router não recebem o pathname; o painel admin precisa dele
+ * para bloquear páginas conforme o papel do funcionário (lib/auth/papeis.ts).
+ * Sempre sobrescreve o header — nunca confiar num x-pathname vindo do cliente.
+ */
+function comCaminho(request: NextRequest, caminhoInterno: string): Headers {
+  const headers = new Headers(request.headers);
+  headers.set("x-pathname", caminhoInterno);
+  return headers;
 }
 
 export const config = {

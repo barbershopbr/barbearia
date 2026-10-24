@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FuncionarioDialog } from "./funcionario-form";
 import { toggleFuncionarioAtivo, deleteFuncionario } from "./actions";
+import { getCurrentStaff } from "@/lib/auth/current-staff";
+import { PAPEL_LABEL } from "@/lib/auth/papeis";
+import { AcessoAcoes, NovoAcessoDialog } from "./acesso-ui";
 
 export default async function FuncionariosPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -12,11 +15,13 @@ export default async function FuncionariosPage({ params }: { params: Promise<{ s
   if (!empresa) return null;
 
   const supabase = await createSupabaseServerClient();
-  const { data: funcionarios } = await supabase
-    .from("funcionarios")
-    .select("*")
-    .eq("empresa_id", empresa.id)
-    .order("nome");
+  const [{ data: funcionarios }, { data: acessos }, staff] = await Promise.all([
+    supabase.from("funcionarios").select("*").eq("empresa_id", empresa.id).order("nome"),
+    supabase.from("usuarios_empresa").select("*").eq("empresa_id", empresa.id).order("nome"),
+    getCurrentStaff(empresa.id),
+  ]);
+  const gestor = staff?.role === "owner" || staff?.role === "admin";
+  const funcionarioDoAcesso = new Map((funcionarios ?? []).filter((f) => f.usuario_empresa_id).map((f) => [f.usuario_empresa_id, f.nome]));
 
   return (
     <div className="space-y-6">
@@ -70,6 +75,56 @@ export default async function FuncionariosPage({ params }: { params: Promise<{ s
           )}
         </TableBody>
       </Table>
+
+      <div className="space-y-3 pt-6">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-semibold">Acessos ao painel</h2>
+            <p className="text-sm text-muted-foreground">Quem da equipe entra no painel e o que cada um pode ver.</p>
+          </div>
+          {gestor && (
+            <NovoAcessoDialog
+              slug={slug}
+              funcionarios={(funcionarios ?? []).filter((f) => !f.usuario_empresa_id).map((f) => ({ id: f.id, nome: f.nome }))}
+            />
+          )}
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nome</TableHead>
+              <TableHead>E-mail</TableHead>
+              <TableHead>Papel</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {(acessos ?? []).map((a) => (
+              <TableRow key={a.id}>
+                <TableCell>
+                  {a.nome}
+                  {funcionarioDoAcesso.has(a.id) && (
+                    <span className="block text-xs text-muted-foreground">Perfil: {funcionarioDoAcesso.get(a.id)}</span>
+                  )}
+                </TableCell>
+                <TableCell>{a.email}</TableCell>
+                <TableCell>{PAPEL_LABEL[a.role]}</TableCell>
+                <TableCell>
+                  <Badge variant={a.ativo ? "default" : "secondary"}>{a.ativo ? "Ativo" : "Bloqueado"}</Badge>
+                </TableCell>
+                <TableCell>
+                  {gestor && a.role !== "owner" && a.id !== staff?.id ? (
+                    <AcessoAcoes slug={slug} usuarioEmpresaId={a.id} papel={a.role} ativo={a.ativo} />
+                  ) : (
+                    <span className="block text-right text-xs text-muted-foreground">—</span>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }

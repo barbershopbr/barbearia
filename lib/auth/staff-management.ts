@@ -26,18 +26,22 @@ export async function createStaffAccount(
     return { error: "Não foi possível criar a conta: e-mail já em uso ou inválido." };
   }
 
-  const { error: insertError } = await admin.from("usuarios_empresa").insert({
-    empresa_id: empresaId,
-    auth_user_id: created.user.id,
-    nome: input.nome,
-    email,
-    role: input.role,
-  });
+  const { data: usuario, error: insertError } = await admin
+    .from("usuarios_empresa")
+    .insert({
+      empresa_id: empresaId,
+      auth_user_id: created.user.id,
+      nome: input.nome,
+      email,
+      role: input.role,
+    })
+    .select("id")
+    .single();
 
-  if (insertError) {
+  if (insertError || !usuario) {
     await admin.auth.admin.deleteUser(created.user.id);
     return { error: "Não foi possível vincular a conta à empresa." };
   }
 
-  return { error: null };
+  return { error: null, usuarioEmpresaId: usuario.id };
 }

@@ -12,3 +12,6 @@ export function syntheticAuthEmail(empresaId: string, realEmail: string): string
   const hash = createHash("sha256").update(`${empresaId}:${normalized}`).digest("hex").slice(0, 32);
   return `cliente-${hash}@auth.internal`;
 }
+
+/** Domínio reservado (RFC 2606) do e-mail de cliente cadastrado no balcão sem e-mail — não exibir. */
+export const SEM_EMAIL_SUFIXO = "@sem-email.invalid";

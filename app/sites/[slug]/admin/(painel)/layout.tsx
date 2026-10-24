@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { Scissors } from "lucide-react";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
@@ -7,6 +8,7 @@ import { tenantBasePath } from "@/lib/tenant/base-path";
 import { signOutStaff } from "../actions";
 import { Button } from "@/components/ui/button";
 import { PLANOS_SAAS, temRecurso, type Recurso } from "@/lib/plano/recursos";
+import { PAPEL_LABEL, podeAcessarSecao, secaoDoCaminho, secaoInicial } from "@/lib/auth/papeis";
 
 const NAV_ITEMS: { href: string; label: string; recurso?: Recurso }[] = [
   { href: "/admin", label: "Dashboard" },
@@ -44,6 +46,20 @@ export default async function AdminPainelLayout({
   const staff = await getCurrentStaff(empresa.id);
   if (!staff) redirect(`${base}/admin/login`);
 
+  // Página fora do papel (ex.: barbeiro abrindo /admin/financeiro pela URL):
+  // manda para a primeira seção liberada. O menu abaixo já esconde o resto.
+  const secao = secaoDoCaminho((await headers()).get("x-pathname") ?? "");
+  if (secao !== null && !podeAcessarSecao(staff.role, secao)) {
+    const destino = secaoInicial(staff.role);
+    redirect(`${base}/admin${destino ? `/${destino}` : ""}`);
+  }
+
+  const itens = NAV_ITEMS.filter(
+    (item) =>
+      (!item.recurso || temRecurso(empresa, item.recurso)) &&
+      podeAcessarSecao(staff.role, item.href.replace(/^\/admin\/?/, "")),
+  );
+
   return (
     <div className="flex min-h-screen">
       <aside className="flex w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar p-4 text-sidebar-foreground">
@@ -52,7 +68,7 @@ export default async function AdminPainelLayout({
           <p className="font-heading truncate text-sm font-semibold tracking-wide uppercase">{empresa.nome}</p>
         </div>
         <nav className="flex-1 space-y-1">
-          {NAV_ITEMS.filter((item) => !item.recurso || temRecurso(empresa, item.recurso)).map((item) => (
+          {itens.map((item) => (
             <Link
               key={item.href}
               href={`${base}${item.href}`}
@@ -64,7 +80,7 @@ export default async function AdminPainelLayout({
         </nav>
         <div className="mt-6 border-t border-sidebar-border pt-4">
           <p className="mb-1 text-xs text-sidebar-foreground/60">Plano {PLANOS_SAAS[empresa.plano_saas].nome}</p>
-          <p className="mb-2 text-xs text-sidebar-foreground/60">{staff.nome} · {staff.role}</p>
+          <p className="mb-2 text-xs text-sidebar-foreground/60">{staff.nome} · {PAPEL_LABEL[staff.role]}</p>
           <form action={signOutStaff.bind(null, slug)}>
             <Button type="submit" variant="outline" size="sm" className="w-full border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent">
               Sair
