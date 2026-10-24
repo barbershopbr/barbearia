@@ -8,6 +8,7 @@ import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import { getCurrentStaff } from "@/lib/auth/current-staff";
 import { SEM_EMAIL_SUFIXO, syntheticAuthEmail } from "@/lib/auth/cliente-identity";
 import type { ActionState } from "../../../area-cliente/actions";
+import { exigirEdicao } from "@/lib/auth/exigir-permissao";
 
 /**
  * Cadastro/edição de cliente pela equipe (atendimento no balcão).
@@ -24,6 +25,7 @@ export async function salvarCliente(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  await exigirEdicao("clientes");
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
   if (!(await getCurrentStaff(empresa.id))) return { error: "Sem permissão." };

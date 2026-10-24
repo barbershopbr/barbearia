@@ -7,8 +7,10 @@ import { hasConflict } from "@/lib/agenda/available-slots";
 import { creditarPontosAgendamento } from "@/lib/fidelidade/creditar";
 import type { ActionState } from "../../../area-cliente/actions";
 import type { AgendamentoStatus } from "@/lib/supabase/types";
+import { exigirEdicao } from "@/lib/auth/exigir-permissao";
 
 export async function createAgendamentoAdmin(slug: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+  await exigirEdicao("agenda");
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
 
@@ -55,6 +57,7 @@ export async function createAgendamentoAdmin(slug: string, _prev: ActionState, f
 }
 
 export async function updateAgendamentoStatus(agendamentoId: string, status: AgendamentoStatus) {
+  await exigirEdicao("agenda");
   const supabase = await createSupabaseServerClient();
   const { data: agendamento } = await supabase
     .from("agendamentos")

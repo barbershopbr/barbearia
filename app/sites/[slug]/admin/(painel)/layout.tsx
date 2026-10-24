@@ -8,7 +8,7 @@ import { tenantBasePath } from "@/lib/tenant/base-path";
 import { signOutStaff } from "../actions";
 import { Button } from "@/components/ui/button";
 import { PLANOS_SAAS, temRecurso, type Recurso } from "@/lib/plano/recursos";
-import { PAPEL_LABEL, podeAcessarSecao, secaoDoCaminho, secaoInicial } from "@/lib/auth/papeis";
+import { PAPEL_LABEL, nivelSecao, podeAcessarSecao, secaoDoCaminho, secaoInicial } from "@/lib/auth/papeis";
 
 const NAV_ITEMS: { href: string; label: string; recurso?: Recurso }[] = [
   { href: "/admin", label: "Dashboard" },
@@ -49,15 +49,15 @@ export default async function AdminPainelLayout({
   // Página fora do papel (ex.: barbeiro abrindo /admin/financeiro pela URL):
   // manda para a primeira seção liberada. O menu abaixo já esconde o resto.
   const secao = secaoDoCaminho((await headers()).get("x-pathname") ?? "");
-  if (secao !== null && !podeAcessarSecao(staff.role, secao)) {
-    const destino = secaoInicial(staff.role);
+  if (secao !== null && !podeAcessarSecao(staff, secao)) {
+    const destino = secaoInicial(staff);
     redirect(`${base}/admin${destino ? `/${destino}` : ""}`);
   }
 
   const itens = NAV_ITEMS.filter(
     (item) =>
       (!item.recurso || temRecurso(empresa, item.recurso)) &&
-      podeAcessarSecao(staff.role, item.href.replace(/^\/admin\/?/, "")),
+      podeAcessarSecao(staff, item.href.replace(/^\/admin\/?/, "")),
   );
 
   return (
@@ -88,7 +88,14 @@ export default async function AdminPainelLayout({
           </form>
         </div>
       </aside>
-      <main className="flex-1 bg-background p-6">{children}</main>
+      <main className="flex-1 bg-background p-6">
+        {secao !== null && nivelSecao(staff, secao) === "ver" && (
+          <p className="mb-4 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
+            Você pode ver esta seção, mas não alterar. Fale com o responsável se precisar editar.
+          </p>
+        )}
+        {children}
+      </main>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { refresh } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import type { ActionState } from "../../../area-cliente/actions";
+import { exigirEdicao } from "@/lib/auth/exigir-permissao";
 
 /** Cria (servicoId null) ou edita um serviço. */
 export async function salvarServico(
@@ -12,6 +13,7 @@ export async function salvarServico(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  await exigirEdicao("servicos");
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
 
@@ -39,12 +41,14 @@ export async function salvarServico(
 // revalidatePath aqui (as páginas deste projeto já são dinâmicas por usarem
 // cookies() via createSupabaseServerClient).
 export async function toggleServicoAtivo(servicoId: string, ativo: boolean) {
+  await exigirEdicao("servicos");
   const supabase = await createSupabaseServerClient();
   await supabase.from("servicos").update({ ativo: !ativo }).eq("id", servicoId);
   refresh();
 }
 
 export async function deleteServico(servicoId: string) {
+  await exigirEdicao("servicos");
   const supabase = await createSupabaseServerClient();
   await supabase.from("servicos").delete().eq("id", servicoId);
   refresh();

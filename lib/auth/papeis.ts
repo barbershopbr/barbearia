@@ -1,19 +1,38 @@
-import type { UsuarioEmpresaRole } from "@/lib/supabase/types";
+import type { UsuarioEmpresa, UsuarioEmpresaRole } from "@/lib/supabase/types";
 
 /**
- * O que cada papel da equipe acessa no painel admin, por seção
- * (primeiro segmento depois de /admin; "" = dashboard).
+ * Permissões da equipe no painel admin. O dono decide, por funcionário e por
+ * seção, se ele não acessa, só vê ou vê e edita (usuarios_empresa.permissions).
+ * O papel serve só como modelo inicial; owner/admin sempre podem tudo.
  *
- * Isto controla menu e páginas. A RLS do banco ainda libera as tabelas para
- * qualquer staff ativo — restringir também no banco (ex.: barbeiro só ver a
- * própria agenda) é o próximo passo do escopo "Login do barbeiro".
+ * Seção = primeiro segmento depois de /admin ("" = dashboard). Toda página
+ * nova do admin precisa entrar em SECOES.
  */
-const SECOES_POR_PAPEL: Record<UsuarioEmpresaRole, readonly string[] | "todas"> = {
-  owner: "todas",
-  admin: "todas",
-  recepcionista: ["", "agenda", "clientes", "pedidos", "assinaturas", "meu-historico"],
-  barbeiro: ["agenda", "clientes", "meu-historico"],
-};
+export type Nivel = "ver" | "editar";
+export type Permissoes = Record<string, Nivel>;
+
+export const SECOES: { id: string; label: string }[] = [
+  { id: "", label: "Dashboard" },
+  { id: "agenda", label: "Agenda" },
+  { id: "clientes", label: "Clientes" },
+  { id: "servicos", label: "Serviços" },
+  { id: "funcionarios", label: "Funcionários" },
+  { id: "pedidos", label: "Pedidos da loja" },
+  { id: "produtos", label: "Produtos e estoque" },
+  { id: "fornecedores", label: "Fornecedores" },
+  { id: "planos", label: "Planos de assinatura" },
+  { id: "assinaturas", label: "Assinaturas de clientes" },
+  { id: "cupons", label: "Cupons" },
+  { id: "fidelidade", label: "Fidelidade" },
+  { id: "comissoes", label: "Comissões" },
+  { id: "financeiro", label: "Financeiro" },
+  { id: "site", label: "Aparência do site" },
+  { id: "dominio", label: "Domínio" },
+  { id: "configuracoes", label: "Configurações" },
+];
+
+/** Sempre liberada: cada um vê os próprios atendimentos e comissões. */
+const SECAO_PESSOAL = "meu-historico";
 
 export const PAPEL_LABEL: Record<UsuarioEmpresaRole, string> = {
   owner: "Responsável",
@@ -25,16 +44,44 @@ export const PAPEL_LABEL: Record<UsuarioEmpresaRole, string> = {
 /** Papéis que o dono pode dar a alguém da equipe (owner só nasce pelo Master). */
 export const PAPEIS_ATRIBUIVEIS: UsuarioEmpresaRole[] = ["barbeiro", "recepcionista", "admin"];
 
-/** `secao` é o trecho do caminho depois de /admin: "", "agenda", "financeiro"... */
-export function podeAcessarSecao(papel: UsuarioEmpresaRole, secao: string): boolean {
-  const permitidas = SECOES_POR_PAPEL[papel];
-  return permitidas === "todas" || permitidas.includes(secao);
+/** Modelo inicial de cada papel — o dono ajusta depois em Funcionários → Permissões. */
+export const PERMISSOES_PADRAO: Record<"barbeiro" | "recepcionista", Permissoes> = {
+  barbeiro: { agenda: "editar", clientes: "ver" },
+  recepcionista: { "": "ver", agenda: "editar", clientes: "editar", pedidos: "editar", assinaturas: "ver", servicos: "ver", produtos: "ver" },
+};
+
+type StaffPerm = Pick<UsuarioEmpresa, "role" | "permissions">;
+
+function ehGestor(staff: StaffPerm): boolean {
+  return staff.role === "owner" || staff.role === "admin";
 }
 
-/** Primeira seção liberada para o papel — destino quando ele abre algo proibido. */
-export function secaoInicial(papel: UsuarioEmpresaRole): string {
-  const permitidas = SECOES_POR_PAPEL[papel];
-  return permitidas === "todas" ? "" : permitidas[0];
+/** Permissões efetivas: as salvas pelo dono ou, se nunca salvas, o modelo do papel. */
+export function permissoesDe(staff: StaffPerm): Permissoes {
+  const salvas = (staff.permissions as { secoes?: unknown } | null)?.secoes;
+  if (salvas && typeof salvas === "object") {
+    const limpas: Permissoes = {};
+    for (const [secao, nivel] of Object.entries(salvas)) {
+      if (nivel === "ver" || nivel === "editar") limpas[secao] = nivel;
+    }
+    return limpas;
+  }
+  return staff.role === "barbeiro" || staff.role === "recepcionista" ? PERMISSOES_PADRAO[staff.role] : {};
+}
+
+export function nivelSecao(staff: StaffPerm, secao: string): Nivel | null {
+  if (ehGestor(staff) || secao === SECAO_PESSOAL) return "editar";
+  return permissoesDe(staff)[secao] ?? null;
+}
+
+export function podeAcessarSecao(staff: StaffPerm, secao: string): boolean {
+  return nivelSecao(staff, secao) !== null;
+}
+
+/** Primeira seção liberada — destino quando a pessoa abre algo proibido. */
+export function secaoInicial(staff: StaffPerm): string {
+  if (ehGestor(staff)) return "";
+  return SECOES.find((s) => podeAcessarSecao(staff, s.id))?.id ?? SECAO_PESSOAL;
 }
 
 /** Extrai a seção de um caminho interno: /sites/x/admin/agenda/123 → "agenda". */

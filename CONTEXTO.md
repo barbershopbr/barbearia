@@ -59,6 +59,17 @@ Claude Code via `CLAUDE.md`. O escopo completo do produto está em `ESCOPO.md`.
 - Serviços, funcionários, produtos e planos agora têm **Editar**. Actions novas
   chamam `refresh()` de `next/cache` (Next 16) para atualizar a tela.
 
+## Equipe e permissões (2026-10-24)
+- Funcionários → **Acessos ao painel**: dono cria login (barbeiro/recepcionista/admin),
+  vincula ao perfil, troca senha/papel, bloqueia. **Permissões por pessoa e por seção**
+  (sem acesso / ver / ver e editar) em `usuarios_empresa.permissions.secoes`; papel é só
+  o modelo inicial (`lib/auth/papeis.ts`). Owner/admin sempre tudo.
+- Aplicação: layout do admin (menu + redirect + aviso "só ver", via header `x-pathname`
+  do middleware) e `exigirEdicao(secao)` no início de toda action de escrita do admin.
+- Falta: RLS por permissão no banco (hoje qualquer staff ativo passa na RLS) e agenda do
+  barbeiro filtrada só para os próprios atendimentos.
+- Clientes: cadastro no balcão (com/sem e-mail), edição, busca, atendimentos/última visita.
+
 ## Próximos passos
 1. **Etapa 2 (Venda do SaaS)** do `ESCOPO.md`.
 

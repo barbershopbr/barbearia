@@ -3,20 +3,16 @@
 import { refresh } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
-import { getCurrentStaff } from "@/lib/auth/current-staff";
 import { lerSiteConfig } from "@/lib/site/config";
 import type { ActionState } from "../../../area-cliente/actions";
+import { exigirEdicao } from "@/lib/auth/exigir-permissao";
 
 const COR_REGEX = /^#[0-9a-fA-F]{6}$/;
 
-/** Aparência do site é do responsável/admin, como as Configurações. */
+/** Quem pode editar é decidido por exigirEdicao("site") no início de cada action. */
 async function requireGestor(slug: string) {
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." as const };
-  const staff = await getCurrentStaff(empresa.id);
-  if (!staff || (staff.role !== "owner" && staff.role !== "admin")) {
-    return { error: "Só o responsável ou um admin pode alterar o site." as const };
-  }
   return { empresa };
 }
 
@@ -32,6 +28,7 @@ function cor(v: FormDataEntryValue | null, padrao: string): string {
 }
 
 export async function salvarAparencia(slug: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+  await exigirEdicao("site");
   const check = await requireGestor(slug);
   if ("error" in check) return { error: check.error };
   const { empresa } = check;
@@ -75,6 +72,7 @@ export async function salvarAparencia(slug: string, _prev: ActionState, formData
 }
 
 export async function adicionarFotosGaleria(slug: string, urls: string[]): Promise<ActionState> {
+  await exigirEdicao("site");
   const check = await requireGestor(slug);
   if ("error" in check) return { error: check.error };
 
@@ -97,12 +95,14 @@ export async function adicionarFotosGaleria(slug: string, urls: string[]): Promi
 }
 
 export async function atualizarLegendaFoto(fotoId: string, legenda: string) {
+  await exigirEdicao("site");
   const supabase = await createSupabaseServerClient();
   await supabase.from("galeria_fotos").update({ legenda: legenda.trim() || null }).eq("id", fotoId);
   refresh();
 }
 
 export async function removerFotoGaleria(fotoId: string) {
+  await exigirEdicao("site");
   const supabase = await createSupabaseServerClient();
   await supabase.from("galeria_fotos").delete().eq("id", fotoId);
   refresh();
@@ -114,6 +114,7 @@ export async function salvarPromocao(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  await exigirEdicao("site");
   const check = await requireGestor(slug);
   if ("error" in check) return { error: check.error };
 
@@ -147,12 +148,14 @@ export async function salvarPromocao(
 }
 
 export async function togglePromocaoAtiva(promocaoId: string, ativo: boolean) {
+  await exigirEdicao("site");
   const supabase = await createSupabaseServerClient();
   await supabase.from("promocoes").update({ ativo: !ativo }).eq("id", promocaoId);
   refresh();
 }
 
 export async function removerPromocao(promocaoId: string) {
+  await exigirEdicao("site");
   const supabase = await createSupabaseServerClient();
   await supabase.from("promocoes").delete().eq("id", promocaoId);
   refresh();

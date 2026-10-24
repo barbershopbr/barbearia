@@ -5,7 +5,7 @@ import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import { getCurrentStaff } from "@/lib/auth/current-staff";
 import { createStaffAccount } from "@/lib/auth/staff-management";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
-import { PAPEIS_ATRIBUIVEIS } from "@/lib/auth/papeis";
+import { PAPEIS_ATRIBUIVEIS, SECOES } from "@/lib/auth/papeis";
 import type { UsuarioEmpresaRole } from "@/lib/supabase/types";
 import type { ActionState } from "../../../area-cliente/actions";
 
@@ -108,4 +108,27 @@ export async function redefinirSenhaAcesso(slug: string, usuarioEmpresaId: strin
   const { error } = await r.admin.auth.admin.updateUserById(r.alvo.auth_user_id, { password });
   if (error) return { error: "Não foi possível trocar a senha." };
   return { success: "Senha alterada. Passe a nova senha para a pessoa." };
+}
+
+/**
+ * Salva o que o funcionário pode ver/editar em cada seção. Campo "secao_<id>"
+ * com "", "ver" ou "editar". "restaurar" volta ao modelo do papel.
+ */
+export async function salvarPermissoes(slug: string, usuarioEmpresaId: string, formData: FormData): Promise<ActionState> {
+  const r = await acessoEditavel(slug, usuarioEmpresaId);
+  if ("error" in r) return { error: r.error };
+
+  let permissions: Record<string, unknown> = {};
+  if (formData.get("restaurar") !== "1") {
+    const secoes: Record<string, "ver" | "editar"> = {};
+    for (const { id } of SECOES) {
+      const nivel = formData.get(`secao_${id}`);
+      if (nivel === "ver" || nivel === "editar") secoes[id] = nivel;
+    }
+    permissions = { secoes };
+  }
+
+  await r.admin.from("usuarios_empresa").update({ permissions }).eq("id", usuarioEmpresaId);
+  refresh();
+  return { success: "Permissões salvas." };
 }

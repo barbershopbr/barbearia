@@ -1,5 +1,6 @@
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import { getCurrentStaff } from "@/lib/auth/current-staff";
+import { nivelSecao } from "@/lib/auth/papeis";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DominioConfigForm } from "@/components/dominio-config-form";
 import { tenantLabel } from "@/lib/tenant/domain";
@@ -14,7 +15,7 @@ export default async function DominioPage({ params }: { params: Promise<{ slug: 
   if (!temRecurso(empresa, "dominio_proprio")) return <RecursoBloqueado recurso="dominio_proprio" />;
 
   const staff = await getCurrentStaff(empresa.id);
-  const podeEditar = staff && (staff.role === "owner" || staff.role === "admin");
+  const podeEditar = !!staff && nivelSecao(staff, "dominio") === "editar";
 
   return (
     <div className="space-y-6">
@@ -41,7 +42,7 @@ export default async function DominioPage({ params }: { params: Promise<{ slug: 
             />
           ) : (
             <p className="text-sm text-muted-foreground">
-              Só o responsável ou um admin da empresa pode configurar o domínio.
+              Você não tem permissão para alterar esta seção. Fale com o responsável.
             </p>
           )}
         </CardContent>

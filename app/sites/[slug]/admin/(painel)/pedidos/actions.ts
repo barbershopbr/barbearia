@@ -2,8 +2,10 @@
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { creditarPontosPedido } from "@/lib/fidelidade/creditar";
+import { exigirEdicao } from "@/lib/auth/exigir-permissao";
 
 export async function toggleSeparado(pagamentoId: string, separado: boolean) {
+  await exigirEdicao("pedidos");
   const supabase = await createSupabaseServerClient();
   const { data: pagamento } = await supabase
     .from("pagamentos")

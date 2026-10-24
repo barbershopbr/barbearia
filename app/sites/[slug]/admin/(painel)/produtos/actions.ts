@@ -5,8 +5,10 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import type { ActionState } from "../../../area-cliente/actions";
 import { exigirRecurso } from "@/lib/plano/recursos";
+import { exigirEdicao } from "@/lib/auth/exigir-permissao";
 
 export async function createCategoria(slug: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+  await exigirEdicao("produtos");
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
   exigirRecurso(empresa, "loja");
@@ -28,6 +30,7 @@ export async function salvarProduto(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  await exigirEdicao("produtos");
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
   exigirRecurso(empresa, "loja");
@@ -56,12 +59,14 @@ export async function salvarProduto(
 }
 
 export async function toggleProdutoAtivo(produtoId: string, ativo: boolean) {
+  await exigirEdicao("produtos");
   const supabase = await createSupabaseServerClient();
   await supabase.from("produtos").update({ ativo: !ativo }).eq("id", produtoId);
   refresh();
 }
 
 export async function deleteProduto(produtoId: string) {
+  await exigirEdicao("produtos");
   const supabase = await createSupabaseServerClient();
   await supabase.from("produtos").delete().eq("id", produtoId);
   refresh();
@@ -73,6 +78,7 @@ export async function ajustarEstoque(
   delta: number,
   opcoes?: { fornecedorId?: string | null; motivo?: string },
 ) {
+  await exigirEdicao("produtos");
   if (delta === 0) return;
   const supabase = await createSupabaseServerClient();
 
@@ -97,6 +103,7 @@ export async function ajustarEstoque(
 }
 
 export async function registrarEntradaEstoque(slug: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+  await exigirEdicao("produtos");
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
   exigirRecurso(empresa, "loja");

@@ -5,17 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { PAPEIS_ATRIBUIVEIS, PAPEL_LABEL } from "@/lib/auth/papeis";
+import { PAPEIS_ATRIBUIVEIS, PAPEL_LABEL, SECOES, type Permissoes } from "@/lib/auth/papeis";
 import type { UsuarioEmpresaRole } from "@/lib/supabase/types";
-import { alterarPapel, alternarAcessoAtivo, criarAcesso, redefinirSenhaAcesso } from "./acesso-actions";
+import { alterarPapel, alternarAcessoAtivo, criarAcesso, redefinirSenhaAcesso, salvarPermissoes } from "./acesso-actions";
 
 const SELECT =
   "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 const DESCRICAO_PAPEL: Record<string, string> = {
-  barbeiro: "Agenda, clientes e o próprio histórico.",
-  recepcionista: "Agenda, clientes, pedidos e assinaturas.",
-  admin: "Tudo, inclusive financeiro e configurações.",
+  barbeiro: "Começa com agenda e clientes. Você ajusta depois em Permissões.",
+  recepcionista: "Começa com agenda, clientes, pedidos e assinaturas. Ajustável em Permissões.",
+  admin: "Vê e edita tudo, inclusive financeiro e configurações.",
 };
 
 export function NovoAcessoDialog({ slug, funcionarios }: { slug: string; funcionarios: { id: string; nome: string }[] }) {
@@ -121,11 +121,13 @@ export function AcessoAcoes({
   usuarioEmpresaId,
   papel,
   ativo,
+  permissoes,
 }: {
   slug: string;
   usuarioEmpresaId: string;
   papel: UsuarioEmpresaRole;
   ativo: boolean;
+  permissoes: Permissoes;
 }) {
   const [pending, startTransition] = useTransition();
   const [erro, setErro] = useState<string | null>(null);
@@ -159,6 +161,8 @@ export function AcessoAcoes({
           </option>
         ))}
       </select>
+
+      {papel !== "admin" && <PermissoesDialog slug={slug} usuarioEmpresaId={usuarioEmpresaId} permissoes={permissoes} />}
 
       <Dialog
         open={senhaAberta}
@@ -199,5 +203,61 @@ export function AcessoAcoes({
       </Button>
       {erro && <p className="w-full text-right text-xs text-destructive">{erro}</p>}
     </div>
+  );
+}
+
+function PermissoesDialog({ slug, usuarioEmpresaId, permissoes }: { slug: string; usuarioEmpresaId: string; permissoes: Permissoes }) {
+  const [open, setOpen] = useState(false);
+  const [msg, setMsg] = useState<{ erro?: string; ok?: string } | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  function enviar(fd: FormData) {
+    setMsg(null);
+    startTransition(async () => {
+      const r = await salvarPermissoes(slug, usuarioEmpresaId, fd);
+      setMsg(r?.error ? { erro: r.error } : { ok: r?.success });
+    });
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (!o) setMsg(null);
+      }}
+    >
+      <DialogTrigger render={<Button size="sm" variant="outline">Permissões</Button>} />
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>O que esta pessoa pode fazer</DialogTitle>
+        </DialogHeader>
+        <form action={enviar} className="space-y-3">
+          <p className="text-xs text-muted-foreground">&quot;Meu histórico&quot; (próprios atendimentos e comissões) é sempre liberado.</p>
+          <div className="divide-y rounded-md border">
+            {SECOES.map((s) => (
+              <div key={s.id} className="flex items-center justify-between gap-3 px-3 py-2">
+                <span className="text-sm">{s.label}</span>
+                <select name={`secao_${s.id}`} defaultValue={permissoes[s.id] ?? ""} className={`${SELECT} w-40`}>
+                  <option value="">Sem acesso</option>
+                  <option value="ver">Só ver</option>
+                  <option value="editar">Ver e editar</option>
+                </select>
+              </div>
+            ))}
+          </div>
+          {msg?.erro && <p className="text-sm text-destructive">{msg.erro}</p>}
+          {msg?.ok && <p className="text-sm text-emerald-600">{msg.ok}</p>}
+          <div className="flex gap-2">
+            <Button type="submit" className="flex-1" disabled={pending}>
+              {pending ? "Salvando..." : "Salvar permissões"}
+            </Button>
+            <Button type="submit" name="restaurar" value="1" variant="outline" disabled={pending}>
+              Padrão do papel
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

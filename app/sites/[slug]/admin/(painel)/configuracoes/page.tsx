@@ -1,5 +1,6 @@
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import { getCurrentStaff } from "@/lib/auth/current-staff";
+import { nivelSecao } from "@/lib/auth/papeis";
 import { ConfiguracoesForm } from "./configuracoes-form";
 
 export default async function ConfiguracoesPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -8,7 +9,7 @@ export default async function ConfiguracoesPage({ params }: { params: Promise<{ 
   if (!empresa) return null;
 
   const staff = await getCurrentStaff(empresa.id);
-  const podeEditar = staff && (staff.role === "owner" || staff.role === "admin");
+  const podeEditar = !!staff && nivelSecao(staff, "configuracoes") === "editar";
 
   return (
     <div className="space-y-6">
@@ -23,7 +24,7 @@ export default async function ConfiguracoesPage({ params }: { params: Promise<{ 
         <ConfiguracoesForm empresa={empresa} />
       ) : (
         <p className="text-sm text-muted-foreground">
-          Só o responsável ou um admin da empresa pode alterar as configurações.
+          Você não tem permissão para alterar esta seção. Fale com o responsável.
         </p>
       )}
     </div>

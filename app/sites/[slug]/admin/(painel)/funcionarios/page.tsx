@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { FuncionarioDialog } from "./funcionario-form";
 import { toggleFuncionarioAtivo, deleteFuncionario } from "./actions";
 import { getCurrentStaff } from "@/lib/auth/current-staff";
-import { PAPEL_LABEL } from "@/lib/auth/papeis";
+import { PAPEL_LABEL, permissoesDe } from "@/lib/auth/papeis";
 import { AcessoAcoes, NovoAcessoDialog } from "./acesso-ui";
 
 export default async function FuncionariosPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -115,7 +115,7 @@ export default async function FuncionariosPage({ params }: { params: Promise<{ s
                 </TableCell>
                 <TableCell>
                   {gestor && a.role !== "owner" && a.id !== staff?.id ? (
-                    <AcessoAcoes slug={slug} usuarioEmpresaId={a.id} papel={a.role} ativo={a.ativo} />
+                    <AcessoAcoes slug={slug} usuarioEmpresaId={a.id} papel={a.role} ativo={a.ativo} permissoes={permissoesDe(a)} />
                   ) : (
                     <span className="block text-right text-xs text-muted-foreground">—</span>
                   )}

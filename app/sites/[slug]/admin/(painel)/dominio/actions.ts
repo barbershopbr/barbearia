@@ -1,12 +1,12 @@
 "use server";
 
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
-import { getCurrentStaff } from "@/lib/auth/current-staff";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import { invalidateDomainCache } from "@/lib/tenant/domain";
 import { createCustomHostname, deleteCustomHostname, getCustomHostnameStatus, isCloudflareConfigured } from "@/lib/cloudflare/custom-hostnames";
 import type { ActionState } from "../../../area-cliente/actions";
 import { exigirRecurso } from "@/lib/plano/recursos";
+import { exigirEdicao } from "@/lib/auth/exigir-permissao";
 
 const DOMINIO_REGEX = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/;
 
@@ -15,25 +15,19 @@ function normalizarDominio(raw: string): string {
 }
 
 /**
- * Domínio próprio é um recurso sensível (aponta o site inteiro da empresa
- * pra outro lugar) — restrito a owner/admin, diferente do resto do painel
- * do tenant que hoje deixa qualquer staff ativo mexer (ver achado sobre
- * permissions granulares no plano de arquitetura white label).
+ * Domínio próprio aponta o site inteiro para outro lugar: quem pode mexer é
+ * só quem o dono liberar (exigirEdicao("dominio") no início de cada action).
  */
 async function requireOwnerOrAdmin(slug: string) {
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." as const };
   exigirRecurso(empresa, "dominio_proprio");
 
-  const staff = await getCurrentStaff(empresa.id);
-  if (!staff || (staff.role !== "owner" && staff.role !== "admin")) {
-    return { error: "Só o responsável ou um admin da empresa pode configurar o domínio." as const };
-  }
-
   return { empresa };
 }
 
 export async function configurarDominioTenant(slug: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+  await exigirEdicao("dominio");
   const check = await requireOwnerOrAdmin(slug);
   if ("error" in check) return { error: check.error };
   const { empresa } = check;
@@ -83,6 +77,7 @@ export async function configurarDominioTenant(slug: string, _prev: ActionState, 
 }
 
 export async function verificarDominioTenant(slug: string): Promise<ActionState> {
+  await exigirEdicao("dominio");
   const check = await requireOwnerOrAdmin(slug);
   if ("error" in check) return { error: check.error };
   const { empresa } = check;
@@ -105,6 +100,7 @@ export async function verificarDominioTenant(slug: string): Promise<ActionState>
 }
 
 export async function removerDominioTenant(slug: string): Promise<ActionState> {
+  await exigirEdicao("dominio");
   const check = await requireOwnerOrAdmin(slug);
   if ("error" in check) return { error: check.error };
   const { empresa } = check;

@@ -6,6 +6,7 @@ import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import type { ActionState } from "../../../area-cliente/actions";
 import type { PlanoPeriodo } from "@/lib/supabase/types";
 import { exigirRecurso } from "@/lib/plano/recursos";
+import { exigirEdicao } from "@/lib/auth/exigir-permissao";
 
 /** Cria (planoId null) ou edita um plano de assinatura. */
 export async function salvarPlano(
@@ -14,6 +15,7 @@ export async function salvarPlano(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  await exigirEdicao("planos");
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
   exigirRecurso(empresa, "assinaturas");
@@ -42,12 +44,14 @@ export async function salvarPlano(
 }
 
 export async function togglePlanoAtivo(planoId: string, ativo: boolean) {
+  await exigirEdicao("planos");
   const supabase = await createSupabaseServerClient();
   await supabase.from("planos").update({ ativo: !ativo }).eq("id", planoId);
   refresh();
 }
 
 export async function deletePlano(planoId: string) {
+  await exigirEdicao("planos");
   const supabase = await createSupabaseServerClient();
   await supabase.from("planos").delete().eq("id", planoId);
   refresh();

@@ -4,12 +4,14 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import type { ActionState } from "../../../area-cliente/actions";
 import { exigirRecurso } from "@/lib/plano/recursos";
+import { exigirEdicao } from "@/lib/auth/exigir-permissao";
 
 export async function salvarConfigFidelidade(
   slug: string,
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  await exigirEdicao("fidelidade");
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
   exigirRecurso(empresa, "fidelidade");
@@ -44,6 +46,7 @@ export async function salvarConfigFidelidade(
 }
 
 export async function ajustarPontosCliente(slug: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+  await exigirEdicao("fidelidade");
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
   exigirRecurso(empresa, "fidelidade");

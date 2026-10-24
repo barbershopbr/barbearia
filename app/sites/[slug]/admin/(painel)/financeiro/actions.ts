@@ -4,8 +4,10 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import type { ActionState } from "../../../area-cliente/actions";
 import { exigirRecurso } from "@/lib/plano/recursos";
+import { exigirEdicao } from "@/lib/auth/exigir-permissao";
 
 export async function createDespesa(slug: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+  await exigirEdicao("financeiro");
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
   exigirRecurso(empresa, "financeiro");
@@ -32,6 +34,7 @@ export async function createDespesa(slug: string, _prev: ActionState, formData: 
 }
 
 export async function deleteDespesa(despesaId: string) {
+  await exigirEdicao("financeiro");
   const supabase = await createSupabaseServerClient();
   await supabase.from("despesas").delete().eq("id", despesaId);
 }

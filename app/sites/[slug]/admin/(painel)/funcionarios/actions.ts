@@ -4,6 +4,7 @@ import { refresh } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import type { ActionState } from "../../../area-cliente/actions";
+import { exigirEdicao } from "@/lib/auth/exigir-permissao";
 
 /** Cria (funcionarioId null) ou edita o perfil público de um funcionário. */
 export async function salvarFuncionario(
@@ -12,6 +13,7 @@ export async function salvarFuncionario(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  await exigirEdicao("funcionarios");
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
 
@@ -38,12 +40,14 @@ export async function salvarFuncionario(
 }
 
 export async function toggleFuncionarioAtivo(funcionarioId: string, ativo: boolean) {
+  await exigirEdicao("funcionarios");
   const supabase = await createSupabaseServerClient();
   await supabase.from("funcionarios").update({ ativo: !ativo }).eq("id", funcionarioId);
   refresh();
 }
 
 export async function deleteFuncionario(funcionarioId: string) {
+  await exigirEdicao("funcionarios");
   const supabase = await createSupabaseServerClient();
   await supabase.from("funcionarios").delete().eq("id", funcionarioId);
   refresh();

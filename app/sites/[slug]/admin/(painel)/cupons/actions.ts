@@ -4,8 +4,10 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import type { ActionState } from "../../../area-cliente/actions";
 import { exigirRecurso } from "@/lib/plano/recursos";
+import { exigirEdicao } from "@/lib/auth/exigir-permissao";
 
 export async function createCupom(slug: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+  await exigirEdicao("cupons");
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
   exigirRecurso(empresa, "cupons");
@@ -46,11 +48,13 @@ export async function createCupom(slug: string, _prev: ActionState, formData: Fo
 }
 
 export async function toggleCupomAtivo(cupomId: string, ativo: boolean) {
+  await exigirEdicao("cupons");
   const supabase = await createSupabaseServerClient();
   await supabase.from("cupons").update({ ativo: !ativo }).eq("id", cupomId);
 }
 
 export async function deleteCupom(cupomId: string) {
+  await exigirEdicao("cupons");
   const supabase = await createSupabaseServerClient();
   await supabase.from("cupons").delete().eq("id", cupomId);
 }

@@ -94,7 +94,8 @@ Ponto = 600 ÷ 1.450 = R$0,4138 → João R$364,14 · Pedro R$235,86.
 
 ---
 
-## 4. Login do barbeiro
+## 4. Login do funcionário
+- ✅ O dono cria o acesso e decide, seção por seção, o que cada um vê e edita.
 - 🔧 Só a própria agenda e os próprios clientes.
 - 🔧 Comissões e ganhos do dia/mês (avulso + pote).
 - 🆕 Bloquear os próprios horários.

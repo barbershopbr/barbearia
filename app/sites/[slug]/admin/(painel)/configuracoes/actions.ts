@@ -2,8 +2,8 @@
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
-import { getCurrentStaff } from "@/lib/auth/current-staff";
 import type { ActionState } from "../../../area-cliente/actions";
+import { exigirEdicao } from "@/lib/auth/exigir-permissao";
 
 // Mesmas chaves usadas em lib/agenda/available-slots.ts e no site público.
 const DIAS = ["segunda", "terca", "quarta", "quinta", "sexta", "sabado", "domingo"] as const;
@@ -13,13 +13,9 @@ export async function salvarConfiguracoes(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  await exigirEdicao("configuracoes");
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
-
-  const staff = await getCurrentStaff(empresa.id);
-  if (!staff || (staff.role !== "owner" && staff.role !== "admin")) {
-    return { error: "Só o responsável ou um admin pode alterar as configurações." };
-  }
 
   const nome = String(formData.get("nome") ?? "").trim();
   if (!nome) return { error: "O nome da barbearia é obrigatório." };

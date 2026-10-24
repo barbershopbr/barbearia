@@ -1,6 +1,7 @@
 import { ExternalLink } from "lucide-react";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import { getCurrentStaff } from "@/lib/auth/current-staff";
+import { nivelSecao } from "@/lib/auth/papeis";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { tenantOrigin } from "@/lib/tenant/domain";
 import { lerSiteConfig } from "@/lib/site/config";
@@ -18,7 +19,7 @@ export default async function AparenciaSitePage({ params }: { params: Promise<{ 
   if (!empresa) return null;
 
   const staff = await getCurrentStaff(empresa.id);
-  const podeEditar = staff && (staff.role === "owner" || staff.role === "admin");
+  const podeEditar = !!staff && nivelSecao(staff, "site") === "editar";
 
   const supabase = await createSupabaseServerClient();
   const [{ data: fotos }, { data: promocoes }] = await Promise.all([
@@ -46,7 +47,7 @@ export default async function AparenciaSitePage({ params }: { params: Promise<{ 
       </div>
 
       {!podeEditar ? (
-        <p className="text-sm text-muted-foreground">Só o responsável ou um admin da empresa pode alterar o site.</p>
+        <p className="text-sm text-muted-foreground">Você não tem permissão para alterar esta seção. Fale com o responsável.</p>
       ) : (
         <>
           <AparenciaForm empresa={empresa} config={lerSiteConfig(empresa.site_config)} />
