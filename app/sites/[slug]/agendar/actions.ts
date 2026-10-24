@@ -13,6 +13,7 @@ import type { AgendamentoStatus } from "@/lib/supabase/types";
 import { ANTECEDENCIA_MINIMA_HORAS, clientePodeAlterar } from "@/lib/agenda/regras-cliente";
 import { avisarListaEspera } from "@/lib/agenda/lista-espera";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
+import { notificarEquipe } from "@/lib/push/enviar";
 
 export async function listarHorariosDisponiveis(
   slug: string,
@@ -145,6 +146,13 @@ export async function createAgendamento(slug: string, empresaId: string, _prev: 
       valor_desconto: cupom.desconto,
     });
   }
+
+  // Avisa o profissional e a gestão do novo horário marcado pelo site.
+  await notificarEquipe(createSupabaseServiceRoleClient(), empresaId, funcionarioId, {
+    titulo: original ? "Horário remarcado pelo site" : "Novo agendamento pelo site",
+    corpo: `${cliente.nome} · ${data.split("-").reverse().join("/")} às ${hora}`,
+    url: `${await tenantBasePath(slug)}/admin/agenda?dia=${data}`,
+  });
 
   // Quem estava na lista de espera deste dia já agendou; e a remarcação liberou o horário antigo.
   await supabase

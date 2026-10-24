@@ -4,6 +4,7 @@ import type { Database } from "@/lib/supabase/types";
 import { SEM_EMAIL_SUFIXO } from "@/lib/auth/cliente-identity";
 import { tenantOrigin } from "@/lib/tenant/domain";
 import { sendEmail, emailLayout, escapeHtml } from "@/lib/email/send";
+import { notificarCliente } from "@/lib/push/enviar";
 
 const UTC_MENOS_3 = 3 * 3_600_000;
 
@@ -20,12 +21,12 @@ export async function avisarListaEspera(
   const dia = new Date(new Date(vaga.inicioUtc).getTime() - UTC_MENOS_3).toISOString().slice(0, 10);
   const { data: esperando } = (await admin
     .from("lista_espera")
-    .select("id, servico_id, funcionario_id, clientes(nome, email), servicos(nome)")
+    .select("id, cliente_id, servico_id, funcionario_id, clientes(nome, email), servicos(nome)")
     .eq("empresa_id", vaga.empresaId)
     .eq("data", dia)
     .eq("status", "aguardando")
     .or(`funcionario_id.is.null,funcionario_id.eq.${vaga.funcionarioId}`)) as unknown as {
-    data: { id: string; servico_id: string; funcionario_id: string | null; clientes: { nome: string; email: string } | null; servicos: { nome: string } | null }[] | null;
+    data: { id: string; cliente_id: string; servico_id: string; funcionario_id: string | null; clientes: { nome: string; email: string } | null; servicos: { nome: string } | null }[] | null;
   };
   if (!esperando?.length) return 0;
 
@@ -48,6 +49,12 @@ export async function avisarListaEspera(
         }),
       });
     }
+    await notificarCliente(admin, e.cliente_id, {
+      titulo: `Abriu um horário em ${diaBR}!`,
+      corpo: `${empresa.nome}: quem agendar primeiro fica com a vaga.`,
+      url: link,
+      tag: `espera-${dia}`,
+    });
   }
   await admin
     .from("lista_espera")

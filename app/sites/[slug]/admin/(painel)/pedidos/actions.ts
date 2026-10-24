@@ -9,6 +9,7 @@ import { exigirEdicao } from "@/lib/auth/exigir-permissao";
 import { SEM_EMAIL_SUFIXO } from "@/lib/auth/cliente-identity";
 import { tenantOrigin } from "@/lib/tenant/domain";
 import { sendEmail, emailLayout, escapeHtml } from "@/lib/email/send";
+import { notificarCliente } from "@/lib/push/enviar";
 
 /**
  * Fluxo da retirada na barbearia:
@@ -57,6 +58,14 @@ export async function marcarPedidoPronto(pedidoId: string, pronto: boolean) {
 <p>Valor: <strong>${valor}</strong> — pagamento na retirada.</p>${empresa.endereco ? `<p>Endereço: ${escapeHtml(empresa.endereco)}</p>` : ""}`,
           botao: { texto: "Ver meus pedidos", url: `${tenantOrigin(empresa.slug)}/area-cliente/pagamentos` },
         }),
+      });
+    }
+    if (empresa) {
+      await notificarCliente(admin, pedido.cliente_id, {
+        titulo: "Seu pedido está pronto!",
+        corpo: `Já pode retirar na ${empresa.nome}. Pagamento na retirada.`,
+        url: `${tenantOrigin(empresa.slug)}/area-cliente/pagamentos`,
+        tag: `pedido-${pedido.id}`,
       });
     }
   }

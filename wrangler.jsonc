@@ -20,7 +20,9 @@
     "NEXT_PUBLIC_SUPABASE_URL": "https://ifaqsuxxrinpgzfvqvva.supabase.co",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmYXFzdXh4cmlucGd6ZnZxdnZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4Mjg2MjksImV4cCI6MjEwODQwNDYyOX0.K1LtMvj-a9sBPfuzKT7ZVrsQ_8ew-TuEdY0E91oybMM",
     "NEXT_PUBLIC_ROOT_DOMAIN": "usebrcontrol.com.br",
-    "CLOUDFLARE_ZONE_ID": "6be51528bd1733ef8024d0e54cb06193"
+    "CLOUDFLARE_ZONE_ID": "6be51528bd1733ef8024d0e54cb06193",
+    // Chave pública VAPID (notificações push); a privada é o secret VAPID_PRIVATE_KEY.
+    "VAPID_PUBLIC_KEY": "BF-DeAzHkq8MVJA2ZNc5IVD7QgHd5ETI_4Q5smyUr7QoJIXBc44L9HQTsBx1kcf5I2PTzxx8LRFUwlyMbnQ9onU"
   },
   // Domínio raiz (marketing), master.* e {slug}.* — todos no mesmo Worker; o
   // middleware decide pelo Host. DNS: registros A proxied (192.0.2.1) para o

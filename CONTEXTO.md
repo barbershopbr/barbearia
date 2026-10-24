@@ -172,6 +172,14 @@ Claude Code via `CLAUDE.md`. O escopo completo do produto está em `ESCOPO.md`.
   cliente 10/10min, Master 5/15min), cadastro de cliente 5/h, autocadastro 3/h, reset de senha 5/h.
 - Cabeçalhos de segurança em next.config.ts (X-Frame-Options, nosniff, HSTS, Referrer/Permissions-Policy).
 
+## Notificações push (2026-10-24)
+- Web Push próprio (`lib/push/webpush.ts`, WebCrypto: aes128gcm RFC 8291 + VAPID ES256), validado contra
+  `http_ece` e com verificação da assinatura. Chaves: var `VAPID_PUBLIC_KEY` + secret `VAPID_PRIVATE_KEY`
+  (cópia das chaves só no scratchpad da sessão; se perder, gerar novas — inscrições antigas param).
+- `push_inscricoes` (cliente ou equipe). Botão "Ativar notificações" na área do cliente e no menu do painel.
+- Eventos: pedido pronto e vaga da lista de espera (cliente); novo agendamento/remarcação pelo site e
+  cancelamento pelo cliente (barbeiro do atendimento + dono/admins). 404/410 apaga a inscrição.
+
 ## Próximos passos
 1. **Etapa 2 (Venda do SaaS)** do `ESCOPO.md`.
 

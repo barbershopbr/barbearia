@@ -7,6 +7,7 @@ import { avisarListaEspera } from "@/lib/agenda/lista-espera";
 import { getCurrentCliente } from "@/lib/auth/current-cliente";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import { ANTECEDENCIA_MINIMA_HORAS, clientePodeAlterar } from "@/lib/agenda/regras-cliente";
+import { notificarEquipe } from "@/lib/push/enviar";
 
 export async function cancelarAgendamentoCliente(slug: string, agendamentoId: string): Promise<{ error?: string }> {
   const empresa = await getEmpresaBySlug(slug);
@@ -29,10 +30,17 @@ export async function cancelarAgendamentoCliente(slug: string, agendamentoId: st
   const { error } = await supabase.from("agendamentos").update({ status: "cancelado" }).eq("id", agendamentoId).eq("cliente_id", cliente.id);
   if (error) return { error: "Não foi possível cancelar. Tente novamente." };
 
-  await avisarListaEspera(createSupabaseServiceRoleClient(), {
+  const admin = createSupabaseServiceRoleClient();
+  await avisarListaEspera(admin, {
     empresaId: empresa.id,
     funcionarioId: agendamento.funcionario_id,
     inicioUtc: agendamento.data_hora_inicio,
+  });
+  const quando = new Date(agendamento.data_hora_inicio).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" });
+  await notificarEquipe(admin, empresa.id, agendamento.funcionario_id, {
+    titulo: "Cliente cancelou um horário",
+    corpo: `${cliente.nome} · ${quando}`,
+    url: "/admin/agenda",
   });
   refresh();
   return {};

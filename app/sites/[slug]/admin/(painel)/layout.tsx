@@ -9,6 +9,7 @@ import { tenantBasePath } from "@/lib/tenant/base-path";
 import { marcarTutorialVisto, signOutStaff } from "../actions";
 import { TourPainel, BotaoVerTutorial } from "@/components/tour-painel";
 import { PainelShell } from "@/components/painel-shell";
+import { BotaoNotificacoes } from "@/components/botao-notificacoes";
 import { AvisoMensalidade, TelaBloqueio } from "@/components/aviso-mensalidade";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { hojeNoBrasil } from "@/lib/tenant/timezone";
@@ -125,6 +126,7 @@ export default async function AdminPainelLayout({ children, params }: { children
               Ver meu site ↗
             </a>
             <BotaoVerTutorial className="block w-full rounded px-2 py-1.5 text-left text-xs text-sidebar-foreground/70 hover:bg-sidebar-accent" />
+            <BotaoNotificacoes slug={slug} quem="equipe" chavePublica={process.env.VAPID_PUBLIC_KEY ?? ""} className="px-2 py-1.5" />
           </div>
           <div className="mt-4 border-t border-sidebar-border pt-4">
             <p className="mb-1 text-xs text-sidebar-foreground/60">Plano {PLANOS_SAAS[empresa.plano_saas].nome}</p>

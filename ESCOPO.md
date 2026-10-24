@@ -43,7 +43,7 @@ Recursos são ligados/desligados por plano (feature flags por empresa). 🆕
   (Supabase Storage, bucket `midia`). Serviços, equipe (com foto), produtos
   (com foto) e planos com criar/editar/excluir. 🆕 Avaliações.
 - ✅ Página "Entrar" separando cliente e equipe.
-- ✅ **PWA**: instalável no celular com nome, cores e logo da barbearia (push: 🆕). Também
+- ✅ **PWA**: instalável no celular com nome, cores e logo da barbearia + push. Também
   funciona como site responsivo comum.
 
 ---

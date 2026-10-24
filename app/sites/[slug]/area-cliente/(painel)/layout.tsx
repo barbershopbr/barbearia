@@ -4,6 +4,7 @@ import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import { getCurrentCliente } from "@/lib/auth/current-cliente";
 import { tenantBasePath } from "@/lib/tenant/base-path";
 import { SignOutButton } from "../sign-out-button";
+import { BotaoNotificacoes } from "@/components/botao-notificacoes";
 import { temRecurso, type Recurso } from "@/lib/plano/recursos";
 
 const NAV_ITEMS: { href: string; label: string; recurso?: Recurso }[] = [
@@ -36,7 +37,10 @@ export default async function AreaClientePainelLayout({
           <h1 className="font-heading text-xl font-bold tracking-wide uppercase">Olá, {cliente.nome}</h1>
           <p className="text-sm text-muted-foreground">{empresa.nome}</p>
         </div>
-        <SignOutButton slug={slug} />
+        <div className="flex flex-col items-end gap-1">
+          <SignOutButton slug={slug} />
+          <BotaoNotificacoes slug={slug} quem="cliente" chavePublica={process.env.VAPID_PUBLIC_KEY ?? ""} />
+        </div>
       </div>
 
       <nav className="flex flex-wrap gap-1 border-b pb-2">

@@ -236,6 +236,16 @@ export type ListaEspera = Timestamps & {
   avisado_em: string | null;
 };
 
+export type PushInscricao = Timestamps & {
+  id: string;
+  empresa_id: string;
+  cliente_id: string | null;
+  usuario_empresa_id: string | null;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+};
+
 export type GaleriaFoto = Timestamps & {
   id: string;
   empresa_id: string;
@@ -520,6 +530,7 @@ export type Database = {
       notas_fiscais: TableDef<NotaFiscal>;
       pote_fechamentos: TableDef<PoteFechamento>;
       caixas: TableDef<Caixa>;
+      push_inscricoes: TableDef<PushInscricao>;
       regras_comissao_servico: TableDef<RegraComissaoServico>;
       avaliacoes: TableDef<Avaliacao>;
       lista_espera: TableDef<ListaEspera>;
