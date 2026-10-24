@@ -106,9 +106,9 @@ Ponto = 600 ÷ 1.450 = R$0,4138 → João R$364,14 · Pedro R$235,86.
 - ✅ Agendar e ver agendamentos passados e futuros.
 - ✅ Comprar produto para retirar na barbearia — 🆕 escolhendo pagar online
   ou na retirada.
-- 🆕 Escolher o barbeiro (foto, avaliações).
-- 🆕 Remarcar/cancelar sozinho dentro do prazo definido pela barbearia.
-- 🆕 Lista de espera.
+- ✅ Escolher o barbeiro (foto, avaliações).
+- ✅ Remarcar/cancelar sozinho (até 2h antes; prazo por barbearia: 🆕).
+- ✅ Lista de espera (aviso por e-mail).
 - ✅ Avaliar o atendimento.
 - ✅ Fidelidade e cupons.
 
