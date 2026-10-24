@@ -109,7 +109,7 @@ Ponto = 600 ÷ 1.450 = R$0,4138 → João R$364,14 · Pedro R$235,86.
 - 🆕 Escolher o barbeiro (foto, avaliações).
 - 🆕 Remarcar/cancelar sozinho dentro do prazo definido pela barbearia.
 - 🆕 Lista de espera.
-- 🆕 Avaliar o atendimento.
+- ✅ Avaliar o atendimento.
 - ✅ Fidelidade e cupons.
 
 ---

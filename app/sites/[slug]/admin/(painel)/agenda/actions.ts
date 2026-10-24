@@ -8,6 +8,7 @@ import { ERRO_HORARIO_OCUPADO, hasConflict } from "@/lib/agenda/available-slots"
 import type { ActionState } from "../../../area-cliente/actions";
 import type { AgendamentoStatus } from "@/lib/supabase/types";
 import { processarConclusao } from "@/lib/agenda/concluir";
+import { avisarListaEspera } from "@/lib/agenda/lista-espera";
 import { exigirEdicao } from "@/lib/auth/exigir-permissao";
 import { getCurrentStaff } from "@/lib/auth/current-staff";
 import { escopoAgenda, podeMexerNoProfissional } from "@/lib/auth/agenda-escopo";
@@ -84,13 +85,21 @@ export async function updateAgendamentoStatus(agendamentoId: string, status: Age
     .from("agendamentos")
     .update({ status })
     .eq("id", agendamentoId)
-    .select("empresa_id, cliente_id, funcionario_id, servico_id")
+    .select("empresa_id, cliente_id, funcionario_id, servico_id, data_hora_inicio")
     .maybeSingle();
   if (erroUpdate?.code === ERRO_HORARIO_OCUPADO) {
     // Reativar um cancelado cujo horário já foi ocupado por outro atendimento.
     throw new Error("Esse horário já foi ocupado por outro atendimento.");
   }
 
+  if (agendamento && status === "cancelado") {
+    await avisarListaEspera(createSupabaseServiceRoleClient(), {
+      empresaId: agendamento.empresa_id,
+      funcionarioId: agendamento.funcionario_id,
+      inicioUtc: agendamento.data_hora_inicio,
+    });
+    return;
+  }
   if (!agendamento || status !== "concluido") return;
 
   // A permissão sobre este atendimento já foi conferida acima; pontos, pote e

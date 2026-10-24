@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { createAgendamento, listarHorariosDisponiveis } from "./actions";
+import { createAgendamento, entrarListaEspera, listarHorariosDisponiveis } from "./actions";
 import { validarCupom } from "../cupom-actions";
 import type { Servico, Funcionario } from "@/lib/supabase/types";
 
@@ -34,6 +34,7 @@ export function BookingForm({
   const [horarios, setHorarios] = useState<string[]>([]);
   const [buscandoHorarios, startBusca] = useTransition();
   const [buscaFeita, setBuscaFeita] = useState(false);
+  const [listaEspera, setListaEspera] = useState<{ ok?: string; erro?: string } | null>(null);
 
   const [codigoCupom, setCodigoCupom] = useState("");
   const [cupomAplicado, setCupomAplicado] = useState<{ codigo: string; desconto: number } | null>(null);
@@ -79,6 +80,7 @@ export function BookingForm({
       const disponiveis = await listarHorariosDisponiveis(slug, funcionarioId, data, servicoId);
       setHorarios(disponiveis);
       setBuscaFeita(true);
+      setListaEspera(null);
     });
   }, [slug, servicoId, funcionarioId, data]);
 
@@ -136,7 +138,24 @@ export function BookingForm({
           {buscandoHorarios ? (
             <p className="text-sm text-muted-foreground">Buscando horários livres...</p>
           ) : horarios.length === 0 && buscaFeita ? (
-            <p className="text-sm text-muted-foreground">Nenhum horário disponível nesse dia. Tente outra data.</p>
+            <div className="space-y-2 rounded-md border p-3">
+              <p className="text-sm text-muted-foreground">Nenhum horário disponível nesse dia.</p>
+              {listaEspera ? (
+                <p className={listaEspera.erro ? "text-sm text-destructive" : "text-sm text-emerald-600"}>{listaEspera.erro ?? listaEspera.ok}</p>
+              ) : (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={async () => {
+                    const r = await entrarListaEspera(slug, servicoId, funcionarioId || null, data);
+                    setListaEspera(r.error ? { erro: r.error } : { ok: r.success });
+                  }}
+                >
+                  Me avise se abrir um horário nesse dia
+                </Button>
+              )}
+            </div>
           ) : (
             <div className="flex flex-wrap gap-2">
               {horarios.map((h) => (

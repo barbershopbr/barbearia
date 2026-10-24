@@ -22,6 +22,7 @@ const NAV_ITEMS: { href: string; label: string; recurso?: Recurso }[] = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/agenda", label: "Agenda" },
   { href: "/admin/clientes", label: "Clientes" },
+  { href: "/admin/avaliacoes", label: "Avaliações" },
   { href: "/admin/servicos", label: "Serviços" },
   { href: "/admin/funcionarios", label: "Funcionários" },
   { href: "/admin/pedidos", label: "Pedidos", recurso: "loja" },

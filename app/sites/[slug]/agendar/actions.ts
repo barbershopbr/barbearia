@@ -11,6 +11,8 @@ import { validarEComputarCupom } from "@/lib/cupons/validar";
 import type { ActionState } from "../area-cliente/actions";
 import type { AgendamentoStatus } from "@/lib/supabase/types";
 import { ANTECEDENCIA_MINIMA_HORAS, clientePodeAlterar } from "@/lib/agenda/regras-cliente";
+import { avisarListaEspera } from "@/lib/agenda/lista-espera";
+import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 
 export async function listarHorariosDisponiveis(
   slug: string,
@@ -73,11 +75,11 @@ export async function createAgendamento(slug: string, empresaId: string, _prev: 
   // Remarcar: libera o horário antigo antes de checar conflito (o novo pode
   // se sobrepor a ele) e devolve o status original se algo der errado.
   const remarcarId = String(formData.get("remarcar_id") ?? "").trim() || null;
-  let original: { id: string; status: AgendamentoStatus } | null = null;
+  let original: { id: string; status: AgendamentoStatus; funcionario_id: string; data_hora_inicio: string } | null = null;
   if (remarcarId) {
     const { data: antigo } = await supabase
       .from("agendamentos")
-      .select("id, status, data_hora_inicio")
+      .select("id, status, data_hora_inicio, funcionario_id")
       .eq("id", remarcarId)
       .eq("cliente_id", cliente.id)
       .maybeSingle();
@@ -85,7 +87,7 @@ export async function createAgendamento(slug: string, empresaId: string, _prev: 
       return { error: `Esse horário não pode mais ser remarcado (limite de ${ANTECEDENCIA_MINIMA_HORAS}h antes).` };
     }
     await supabase.from("agendamentos").update({ status: "cancelado" }).eq("id", antigo.id).eq("cliente_id", cliente.id);
-    original = { id: antigo.id, status: antigo.status };
+    original = { id: antigo.id, status: antigo.status, funcionario_id: antigo.funcionario_id, data_hora_inicio: antigo.data_hora_inicio };
   }
   const desfazerRemarcacao = async () => {
     if (original) await supabase.from("agendamentos").update({ status: original.status }).eq("id", original.id);
@@ -144,5 +146,46 @@ export async function createAgendamento(slug: string, empresaId: string, _prev: 
     });
   }
 
+  // Quem estava na lista de espera deste dia já agendou; e a remarcação liberou o horário antigo.
+  await supabase
+    .from("lista_espera")
+    .update({ status: "agendou" })
+    .eq("cliente_id", cliente.id)
+    .eq("data", data)
+    .in("status", ["aguardando", "avisado"]);
+  if (original) {
+    await avisarListaEspera(createSupabaseServiceRoleClient(), {
+      empresaId,
+      funcionarioId: original.funcionario_id,
+      inicioUtc: original.data_hora_inicio,
+    });
+  }
+
   redirect(`${await tenantBasePath(slug)}/area-cliente`);
+}
+
+/** Dia sem horário: o cliente entra na lista de espera e é avisado por e-mail se abrir vaga. */
+export async function entrarListaEspera(
+  slug: string,
+  servicoId: string,
+  funcionarioId: string | null,
+  data: string,
+): Promise<{ error?: string; success?: string }> {
+  const empresa = await getEmpresaBySlug(slug);
+  if (!empresa) return { error: "Barbearia não encontrada." };
+  const cliente = await getCurrentCliente(empresa.id);
+  if (!cliente) return { error: "Entre na sua conta para entrar na lista." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(data) || !servicoId) return { error: "Escolha o serviço e o dia." };
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.from("lista_espera").insert({
+    empresa_id: empresa.id,
+    cliente_id: cliente.id,
+    servico_id: servicoId,
+    funcionario_id: funcionarioId || null,
+    data,
+  });
+  if (error?.code === "23505") return { success: "Você já está na lista de espera deste dia." };
+  if (error) return { error: "Não foi possível entrar na lista." };
+  return { success: "Pronto! Se abrir um horário nesse dia, avisamos por e-mail." };
 }

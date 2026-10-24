@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { tenantBasePath } from "@/lib/tenant/base-path";
 import { ANTECEDENCIA_MINIMA_HORAS, clientePodeAlterar } from "@/lib/agenda/regras-cliente";
 import { CancelarAgendamentoButton } from "./cancelar-button";
+import { AvaliarAtendimento } from "./avaliar-form";
 
 const quando = (iso: string) =>
   new Date(iso).toLocaleString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
@@ -35,7 +36,7 @@ export default async function AreaClienteDashboard({ params }: { params: Promise
   if (!cliente) return null; // layout já redireciona
 
   const supabase = await createSupabaseServerClient();
-  const [{ data: agendamentos }, { data: assinaturas }] = await Promise.all([
+  const [{ data: agendamentos }, { data: assinaturas }, { data: avaliadas }] = await Promise.all([
     supabase
       .from("agendamentos")
       .select("id, data_hora_inicio, status, servicos(nome), funcionarios(nome)")
@@ -47,7 +48,9 @@ export default async function AreaClienteDashboard({ params }: { params: Promise
       .select("id, status, planos(nome, valor)")
       .eq("cliente_id", cliente.id)
       .order("data_inicio", { ascending: false }) as unknown as Promise<{ data: AssinaturaComRelacoes[] | null }>,
+    supabase.from("avaliacoes").select("agendamento_id").eq("cliente_id", cliente.id),
   ]);
+  const jaAvaliados = new Set((avaliadas ?? []).map((a) => a.agendamento_id));
 
   const agora = new Date().toISOString();
   const lista = agendamentos ?? [];
@@ -119,14 +122,18 @@ export default async function AreaClienteDashboard({ params }: { params: Promise
           </CardHeader>
           <CardContent className="space-y-3">
             {anteriores.map((a) => (
-              <div key={a.id} className="flex items-center justify-between border-b pb-2 last:border-0">
+              <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-2 last:border-0">
                 <div>
                   <p className="text-sm font-medium">{a.servicos?.nome}</p>
                   <p className="text-xs text-muted-foreground">
                     {quando(a.data_hora_inicio)} · {a.funcionarios?.nome}
                   </p>
                 </div>
-                <Badge variant="outline">{a.status}</Badge>
+                {a.status === "concluido" && !jaAvaliados.has(a.id) ? (
+                  <AvaliarAtendimento slug={slug} agendamentoId={a.id} />
+                ) : (
+                  <Badge variant="outline">{a.status === "concluido" ? "avaliado" : a.status}</Badge>
+                )}
               </div>
             ))}
           </CardContent>

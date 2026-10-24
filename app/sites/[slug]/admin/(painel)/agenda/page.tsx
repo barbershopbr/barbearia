@@ -78,6 +78,15 @@ export default async function AgendaPage({
       .order("inicio")
       .limit(30),
   ]);
+  const { data: espera } = (await supabase
+    .from("lista_espera")
+    .select("id, status, clientes(nome, telefone), servicos(nome), funcionarios(nome)")
+    .eq("empresa_id", empresa.id)
+    .eq("data", dia)
+    .in("status", ["aguardando", "avisado"])
+    .order("created_at")) as unknown as {
+    data: { id: string; status: string; clientes: { nome: string; telefone: string | null } | null; servicos: { nome: string } | null; funcionarios: { nome: string } | null }[] | null;
+  };
   const nomeProfissional = new Map((funcionarios ?? []).map((f) => [f.id, f.nome]));
   const fmt = (iso: string) =>
     new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
@@ -197,6 +206,24 @@ export default async function AgendaPage({
           )}
         </TableBody>
       </Table>
+
+      {(espera ?? []).length > 0 && (
+        <div className="space-y-2">
+          <h2 className="text-sm font-semibold tracking-wide uppercase">Lista de espera deste dia ({(espera ?? []).length})</h2>
+          <div className="divide-y rounded-md border text-sm">
+            {(espera ?? []).map((e) => (
+              <div key={e.id} className="flex flex-wrap justify-between gap-2 px-3 py-2">
+                <span>
+                  {e.clientes?.nome}
+                  {e.clientes?.telefone ? ` · ${e.clientes.telefone}` : ""} · {e.servicos?.nome}
+                  {e.funcionarios?.nome ? ` com ${e.funcionarios.nome}` : " (qualquer profissional)"}
+                </span>
+                <span className="text-xs text-muted-foreground">{e.status === "avisado" ? "avisado por e-mail" : "aguardando vaga"}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {(bloqueios ?? []).length > 0 && (
         <div className="space-y-2">

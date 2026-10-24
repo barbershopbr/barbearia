@@ -207,6 +207,34 @@ export type FaturaSaas = Timestamps & {
 
 export type MasterAcesso = Timestamps & { id: string; master_admin_id: string; empresa_id: string; motivo: string | null };
 
+export type Avaliacao = Timestamps & {
+  id: string;
+  empresa_id: string;
+  cliente_id: string;
+  agendamento_id: string;
+  funcionario_id: string | null;
+  nota: number;
+  comentario: string | null;
+  resposta: string | null;
+  publicada: boolean;
+};
+
+export type AvaliacaoPublica = Pick<Avaliacao, "id" | "empresa_id" | "funcionario_id" | "nota" | "comentario" | "resposta" | "created_at"> & {
+  cliente_primeiro_nome: string;
+  funcionario_nome: string | null;
+};
+
+export type ListaEspera = Timestamps & {
+  id: string;
+  empresa_id: string;
+  cliente_id: string;
+  servico_id: string;
+  funcionario_id: string | null;
+  data: string;
+  status: "aguardando" | "avisado" | "agendou" | "cancelado";
+  avisado_em: string | null;
+};
+
 export type GaleriaFoto = Timestamps & {
   id: string;
   empresa_id: string;
@@ -479,6 +507,8 @@ export type Database = {
       notas_fiscais: TableDef<NotaFiscal>;
       pote_fechamentos: TableDef<PoteFechamento>;
       caixas: TableDef<Caixa>;
+      avaliacoes: TableDef<Avaliacao>;
+      lista_espera: TableDef<ListaEspera>;
       faturas_saas: TableDef<FaturaSaas>;
       master_acessos: TableDef<MasterAcesso>;
       caixa_movimentos: TableDef<CaixaMovimento>;
@@ -486,6 +516,7 @@ export type Database = {
     };
     Views: {
       produtos_publicos: { Row: ProdutoPublico; Relationships: [] };
+      avaliacoes_publicas: { Row: AvaliacaoPublica; Relationships: [] };
     };
     Functions: {
       auth_empresa_ids: { Args: Record<string, never>; Returns: string[] };

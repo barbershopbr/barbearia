@@ -153,6 +153,12 @@ Claude Code via `CLAUDE.md`. O escopo completo do produto está em `ESCOPO.md`.
 - `/manifest` e `/icone` por barbearia (rotas em app/sites/[slug]; sem extensão porque o middleware
   ignora caminhos com ponto). `public/sw.js` (sem cache de páginas; já trata push/notificationclick).
 
+## Avaliações e lista de espera (2026-10-24)
+- `avaliacoes` (cliente avalia atendimento concluído; RLS confere) + view `avaliacoes_publicas`
+  (primeiro nome). Site: seção "Avaliações" + nota por barbeiro. Admin → Avaliações (responder/ocultar).
+- `lista_espera`: dia sem horário → "Me avise". Cancelamento (cliente, remarcar ou equipe) chama
+  `lib/agenda/lista-espera.ts` → e-mail + status avisado. Agenda do admin mostra a lista do dia.
+
 ## Próximos passos
 1. **Etapa 2 (Venda do SaaS)** do `ESCOPO.md`.
 

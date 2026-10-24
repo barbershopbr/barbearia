@@ -7,7 +7,7 @@
 
 export type TemaSite = "classico" | "moderno" | "minimal";
 
-export type SecaoSite = "promocoes" | "servicos" | "produtos" | "equipe" | "galeria" | "planos" | "contato";
+export type SecaoSite = "promocoes" | "servicos" | "produtos" | "equipe" | "galeria" | "avaliacoes" | "planos" | "contato";
 
 export type SiteConfig = {
   tema: TemaSite;
@@ -35,11 +35,12 @@ export const SECOES_LABEL: Record<SecaoSite, string> = {
   produtos: "Produtos",
   equipe: "Equipe",
   galeria: "Galeria de fotos",
+  avaliacoes: "Avaliações dos clientes",
   planos: "Planos de assinatura",
   contato: "Horários e contato",
 };
 
-const ORDEM_PADRAO: SecaoSite[] = ["promocoes", "servicos", "equipe", "galeria", "produtos", "planos", "contato"];
+const ORDEM_PADRAO: SecaoSite[] = ["promocoes", "servicos", "equipe", "galeria", "avaliacoes", "produtos", "planos", "contato"];
 
 export const SITE_CONFIG_PADRAO: SiteConfig = {
   tema: "classico",

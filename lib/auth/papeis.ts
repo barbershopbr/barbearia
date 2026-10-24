@@ -15,6 +15,7 @@ export const SECOES: { id: string; label: string }[] = [
   { id: "", label: "Dashboard" },
   { id: "agenda", label: "Agenda" },
   { id: "clientes", label: "Clientes" },
+  { id: "avaliacoes", label: "Avaliações" },
   { id: "servicos", label: "Serviços" },
   { id: "funcionarios", label: "Funcionários" },
   { id: "pedidos", label: "Pedidos da loja" },

@@ -86,6 +86,7 @@ export default async function TenantHomePage({ params }: { params: Promise<{ slu
     { data: produtosTodos },
     { data: fotos },
     { data: promocoes },
+    { data: avaliacoes },
   ] = await Promise.all([
     supabase.from("servicos").select("*").eq("empresa_id", empresa.id).eq("ativo", true).order("nome"),
     supabase.from("funcionarios").select("*").eq("empresa_id", empresa.id).eq("ativo", true).order("nome"),
@@ -94,7 +95,16 @@ export default async function TenantHomePage({ params }: { params: Promise<{ slu
     supabase.from("galeria_fotos").select("*").eq("empresa_id", empresa.id).order("ordem").order("created_at"),
     // A policy pública já filtra ativas e dentro da validade.
     supabase.from("promocoes").select("*").eq("empresa_id", empresa.id).order("ordem").order("created_at"),
+    supabase.from("avaliacoes_publicas").select("*").eq("empresa_id", empresa.id).order("created_at", { ascending: false }).limit(200),
   ]);
+
+  // Média geral e por barbeiro (sobre as avaliações publicadas).
+  const listaAvaliacoes = avaliacoes ?? [];
+  const media = (notas: number[]) => (notas.length ? notas.reduce((a, b) => a + b, 0) / notas.length : 0);
+  const mediaGeral = media(listaAvaliacoes.map((a) => a.nota));
+  const notasPorBarbeiro = new Map<string, number[]>();
+  for (const a of listaAvaliacoes) if (a.funcionario_id) notasPorBarbeiro.set(a.funcionario_id, [...(notasPorBarbeiro.get(a.funcionario_id) ?? []), a.nota]);
+  const estrelas = (n: number) => "★".repeat(Math.round(n)) + "☆".repeat(5 - Math.round(n));
 
   // Cliente logado: próximos horários e pedidos ainda não retirados.
   const [{ data: proximosRaw }, { count: pedidosAbertosCount }] = cliente
@@ -268,6 +278,12 @@ export default async function TenantHomePage({ params }: { params: Promise<{ slu
                     className="mx-auto size-24 rounded-full border-2 border-border object-cover"
                   />
                   <p className={tema === "minimal" ? "font-semibold" : "font-heading text-sm font-semibold tracking-wide uppercase"}>{f.nome}</p>
+                  {notasPorBarbeiro.has(f.id) && (
+                    <p className="text-xs text-amber-500">
+                      {estrelas(media(notasPorBarbeiro.get(f.id)!))}{" "}
+                      <span className="text-muted-foreground">({notasPorBarbeiro.get(f.id)!.length})</span>
+                    </p>
+                  )}
                   {f.bio && <p className="text-xs text-muted-foreground">{f.bio}</p>}
                   {cta && (
                     <Link
@@ -290,6 +306,35 @@ export default async function TenantHomePage({ params }: { params: Promise<{ slu
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </section>
+      ) : null,
+
+    avaliacoes:
+      listaAvaliacoes.length > 0 ? (
+        <section id="avaliacoes" className="space-y-6">
+          <SectionTitle tema={tema}>Avaliações</SectionTitle>
+          <p className="text-center text-sm text-muted-foreground sm:text-left">
+            <span className="text-2xl font-bold text-foreground">{mediaGeral.toFixed(1).replace(".", ",")}</span>{" "}
+            <span className="text-amber-500">{estrelas(mediaGeral)}</span> · {listaAvaliacoes.length} avaliação(ões)
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {listaAvaliacoes
+              .filter((a) => a.comentario)
+              .slice(0, 6)
+              .map((a) => (
+                <Card key={a.id} className={card}>
+                  <CardContent className="space-y-2 pt-6 text-sm">
+                    <p className="text-amber-500">{estrelas(a.nota)}</p>
+                    <p>&ldquo;{a.comentario}&rdquo;</p>
+                    <p className="text-xs text-muted-foreground">
+                      {a.cliente_primeiro_nome}
+                      {a.funcionario_nome ? ` · com ${a.funcionario_nome.split(" ")[0]}` : ""}
+                    </p>
+                    {a.resposta && <p className="border-l-2 pl-2 text-xs text-muted-foreground">Resposta: {a.resposta}</p>}
+                  </CardContent>
+                </Card>
+              ))}
           </div>
         </section>
       ) : null,
