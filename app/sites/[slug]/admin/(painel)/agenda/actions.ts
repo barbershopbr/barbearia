@@ -5,10 +5,9 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import { brazilDateTimeToUtc } from "@/lib/tenant/timezone";
 import { ERRO_HORARIO_OCUPADO, hasConflict } from "@/lib/agenda/available-slots";
-import { creditarPontosAgendamento } from "@/lib/fidelidade/creditar";
 import type { ActionState } from "../../../area-cliente/actions";
 import type { AgendamentoStatus } from "@/lib/supabase/types";
-import { lerConfigPote } from "@/lib/comissoes/pote-calculo";
+import { processarConclusao } from "@/lib/agenda/concluir";
 import { exigirEdicao } from "@/lib/auth/exigir-permissao";
 import { getCurrentStaff } from "@/lib/auth/current-staff";
 import { escopoAgenda, podeMexerNoProfissional } from "@/lib/auth/agenda-escopo";
@@ -94,71 +93,7 @@ export async function updateAgendamentoStatus(agendamentoId: string, status: Age
 
   if (!agendamento || status !== "concluido") return;
 
-  // A permissão sobre este atendimento já foi conferida acima. Pontos e
-  // comissão leem regras/configurações que o profissional não pode ver
-  // (RLS por seção), então o processamento automático roda como servidor.
-  const admin = createSupabaseServiceRoleClient();
-
-  await creditarPontosAgendamento(admin, {
-    empresaId: agendamento.empresa_id,
-    clienteId: agendamento.cliente_id,
-    agendamentoId,
-  });
-
-  // Cliente assinante + pote ligado: o atendimento entra no pote das
-  // assinaturas (pontos) e NÃO gera comissão avulsa — senão o barbeiro
-  // receberia duas vezes pelo mesmo atendimento.
-  const [{ data: empresa }, { data: assinatura }] = await Promise.all([
-    admin.from("empresas").select("pote_config").eq("id", agendamento.empresa_id).maybeSingle(),
-    admin
-      .from("assinaturas_clientes")
-      .select("id")
-      .eq("empresa_id", agendamento.empresa_id)
-      .eq("cliente_id", agendamento.cliente_id)
-      .eq("status", "ativa")
-      .order("data_inicio", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-  ]);
-  if (assinatura && lerConfigPote(empresa?.pote_config).ativo) {
-    await admin.from("agendamentos").update({ assinatura_id: assinatura.id }).eq("id", agendamentoId);
-    return;
-  }
-
-  // Gera a comissão automaticamente, se o funcionário tiver uma regra ativa e
-  // ainda não existir comissão lançada para este agendamento (evita duplicar
-  // caso o status seja alternado entre concluído/outro mais de uma vez).
-  const { data: jaExiste } = await admin
-    .from("comissoes")
-    .select("id")
-    .eq("agendamento_id", agendamentoId)
-    .maybeSingle();
-  if (jaExiste) return;
-
-  const [{ data: regra }, { data: servico }] = await Promise.all([
-    admin
-      .from("regras_comissao")
-      .select("tipo, valor")
-      .eq("funcionario_id", agendamento.funcionario_id)
-      .eq("ativo", true)
-      .maybeSingle(),
-    admin.from("servicos").select("preco").eq("id", agendamento.servico_id).maybeSingle(),
-  ]);
-
-  // Diária e salário mensal não são gerados por atendimento — o dono lança
-  // manualmente na tela de Comissões quando quiser.
-  if (!regra || !servico || (regra.tipo !== "percentual" && regra.tipo !== "fixo_por_servico")) return;
-
-  const valorComissao = regra.tipo === "percentual" ? (Number(servico.preco) * regra.valor) / 100 : regra.valor;
-
-  await admin.from("comissoes").insert({
-    empresa_id: agendamento.empresa_id,
-    funcionario_id: agendamento.funcionario_id,
-    agendamento_id: agendamentoId,
-    tipo: "servico",
-    valor: valorComissao,
-    percentual: regra.tipo === "percentual" ? regra.valor : null,
-    periodo_pagamento: "mensal",
-    status: "pendente",
-  });
+  // A permissão sobre este atendimento já foi conferida acima; pontos, pote e
+  // comissão rodam como servidor (ver lib/agenda/concluir.ts).
+  await processarConclusao(createSupabaseServiceRoleClient(), { id: agendamentoId, ...agendamento });
 }

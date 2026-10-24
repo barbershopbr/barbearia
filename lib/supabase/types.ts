@@ -18,7 +18,7 @@ export type UsuarioEmpresaRole = "owner" | "admin" | "barbeiro" | "recepcionista
 export type AgendamentoStatus = "agendado" | "confirmado" | "concluido" | "cancelado" | "falta";
 export type PlanoPeriodo = "mensal" | "trimestral" | "anual";
 export type AssinaturaStatus = "ativa" | "cancelada" | "inadimplente" | "pendente";
-export type PagamentoTipo = "agendamento" | "assinatura" | "produto";
+export type PagamentoTipo = "agendamento" | "assinatura" | "produto" | "balcao";
 export type PagamentoMetodo = "pix" | "cartao" | "cartao_recorrente" | "na_retirada" | "dinheiro";
 export type PagamentoStatus = "pendente" | "pago" | "falhou" | "estornado" | "cancelado";
 export type ComissaoTipo = "servico" | "produto" | "assinatura" | "personalizada" | "diaria" | "mensal";
@@ -253,7 +253,9 @@ export type AssinaturaCliente = Timestamps & {
 export type Pagamento = Timestamps & {
   id: string;
   empresa_id: string;
-  cliente_id: string;
+  /** null = venda de balcão sem cliente cadastrado. */
+  cliente_id: string | null;
+  caixa_id: string | null;
   tipo: PagamentoTipo;
   referencia_id: string | null;
   valor: number;
@@ -272,9 +274,36 @@ export type Pagamento = Timestamps & {
 export type PagamentoItem = Timestamps & {
   id: string;
   pagamento_id: string;
-  produto_id: string;
+  produto_id: string | null;
+  servico_id: string | null;
+  funcionario_id: string | null;
+  /** Atendimento da agenda cobrado no caixa (no máximo uma vez). */
+  agendamento_id: string | null;
+  descricao: string | null;
   quantidade: number;
   preco_unitario: number;
+};
+
+export type Caixa = {
+  id: string;
+  empresa_id: string;
+  aberto_por: string | null;
+  aberto_em: string;
+  valor_inicial: number;
+  fechado_por: string | null;
+  fechado_em: string | null;
+  valor_contado: number | null;
+  observacao: string | null;
+};
+
+export type CaixaMovimento = Timestamps & {
+  id: string;
+  caixa_id: string;
+  empresa_id: string;
+  tipo: "sangria" | "suprimento";
+  valor: number;
+  motivo: string | null;
+  criado_por: string | null;
 };
 
 export type Comissao = Timestamps & {
@@ -430,6 +459,8 @@ export type Database = {
       integracoes: TableDef<Integracao>;
       notas_fiscais: TableDef<NotaFiscal>;
       pote_fechamentos: TableDef<PoteFechamento>;
+      caixas: TableDef<Caixa>;
+      caixa_movimentos: TableDef<CaixaMovimento>;
       promocoes: TableDef<Promocao>;
     };
     Views: {

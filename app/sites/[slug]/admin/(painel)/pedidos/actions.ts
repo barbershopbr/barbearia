@@ -4,6 +4,7 @@ import { refresh } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import { creditarPontosPedido } from "@/lib/fidelidade/creditar";
+import { baixarEstoque } from "@/lib/estoque/baixar";
 import { exigirEdicao } from "@/lib/auth/exigir-permissao";
 import { SEM_EMAIL_SUFIXO } from "@/lib/auth/cliente-identity";
 import { tenantOrigin } from "@/lib/tenant/domain";
@@ -24,7 +25,8 @@ async function carregarPedido(pedidoId: string) {
     .eq("id", pedidoId)
     .eq("tipo", "produto")
     .maybeSingle();
-  return data;
+  // Pedido da loja sempre tem cliente (só venda de balcão fica sem).
+  return data?.cliente_id ? { ...data, cliente_id: data.cliente_id } : null;
 }
 
 export async function marcarPedidoPronto(pedidoId: string, pronto: boolean) {
@@ -80,21 +82,7 @@ export async function marcarPedidoRetirado(pedidoId: string) {
   // sempre tem permissão de editar produtos (RLS por seção).
   const admin = createSupabaseServiceRoleClient();
   const { data: itens } = await admin.from("pagamento_itens").select("produto_id, quantidade").eq("pagamento_id", pedidoId);
-  for (const item of itens ?? []) {
-    const { data: produto } = await admin.from("produtos").select("estoque_atual").eq("id", item.produto_id).maybeSingle();
-    if (!produto) continue;
-    await admin
-      .from("produtos")
-      .update({ estoque_atual: Math.max(0, produto.estoque_atual - item.quantidade) })
-      .eq("id", item.produto_id);
-    await admin.from("estoque_movimentacoes").insert({
-      empresa_id: pedido.empresa_id,
-      produto_id: item.produto_id,
-      tipo: "saida",
-      quantidade: item.quantidade,
-      motivo: "Venda — pedido da loja",
-    });
-  }
+  await baixarEstoque(admin, pedido.empresa_id, itens ?? [], "Venda — pedido da loja");
 
   await creditarPontosPedido(admin, {
     empresaId: pedido.empresa_id,

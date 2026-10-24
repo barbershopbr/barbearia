@@ -74,22 +74,35 @@ export default async function FinanceiroPage({
       .lte("created_at", fimMes.toISOString()),
   ]);
 
-  const receitaServicos = (agendamentosConcluidos ?? []).reduce(
-    (s, a) => s + Number(a.servicos?.preco ?? 0) - Number(a.desconto ?? 0),
-    0,
-  );
+  // Vendas do caixa (balcão) no mês, com os atendimentos da agenda cobrados lá.
+  const { data: vendasBalcao } = (await supabase
+    .from("pagamentos")
+    .select("valor, pagamento_itens(agendamento_id)")
+    .eq("empresa_id", empresa.id)
+    .eq("tipo", "balcao")
+    .eq("status", "pago")
+    .gte("pago_em", inicioMes.toISOString())
+    .lte("pago_em", fimMes.toISOString())) as unknown as { data: { valor: number; pagamento_itens: { agendamento_id: string | null }[] }[] | null };
+  const receitaBalcao = (vendasBalcao ?? []).reduce((s, v) => s + Number(v.valor), 0);
+  const cobradosNoCaixa = new Set((vendasBalcao ?? []).flatMap((v) => v.pagamento_itens.map((i) => i.agendamento_id)).filter(Boolean));
+
+  // Atendimento cobrado no caixa já está em receitaBalcao (com o valor realmente recebido).
+  const receitaServicos = (agendamentosConcluidos ?? [])
+    .filter((a) => !cobradosNoCaixa.has(a.id))
+    .reduce((s, a) => s + Number(a.servicos?.preco ?? 0) - Number(a.desconto ?? 0), 0);
   const receitaAssinaturas = (mensalidadesPagas ?? []).reduce((s, p) => s + Number(p.valor), 0);
   const totalDespesas = (despesas ?? []).reduce((s, d) => s + Number(d.valor), 0);
   const receitaProdutos = (vendasProdutos ?? [])
     .filter((p) => p.status === "pago")
     .reduce((s, p) => s + Number(p.valor), 0);
-  const receitaTotal = receitaServicos + receitaAssinaturas + receitaProdutos;
+  const receitaTotal = receitaServicos + receitaAssinaturas + receitaProdutos + receitaBalcao;
   const saldo = receitaTotal - totalDespesas;
 
   const cards = [
-    { label: "Receita de serviços (mês)", value: receitaServicos },
+    { label: "Atendimentos (agenda)", value: receitaServicos },
     { label: "Mensalidades recebidas (mês)", value: receitaAssinaturas },
-    { label: "Vendas de produtos (mês)", value: receitaProdutos },
+    { label: "Vendas da loja (mês)", value: receitaProdutos },
+    { label: "Vendas no caixa (mês)", value: receitaBalcao },
     { label: "Despesas (mês)", value: -totalDespesas },
     { label: "Saldo do mês", value: saldo, destaque: true },
   ];
@@ -110,7 +123,7 @@ export default async function FinanceiroPage({
         <NovaDespesaDialog slug={slug} />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-6">
         {cards.map((c) => (
           <Card key={c.label}>
             <CardHeader>

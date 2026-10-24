@@ -24,6 +24,7 @@ export function passosTutorial(nomeBarbearia: string): PassoTour[] {
       texto: "Horário de funcionamento, pausa do almoço, endereço e WhatsApp da barbearia.",
     },
     { alvo: "nav-agenda", titulo: "Agenda", texto: "Os atendimentos do dia. Aqui você também bloqueia folgas, férias e feriados." },
+    { alvo: "nav-caixa", titulo: "Caixa", texto: "Venda no balcão: abra o caixa, toque nos serviços e produtos e receba em dinheiro, Pix ou cartão. No fim do dia, feche e confira." },
     { alvo: "nav-clientes", titulo: "Clientes", texto: "Todos os clientes, com histórico. Dá para cadastrar quem chega no balcão." },
     { alvo: "nav-produtos", titulo: "Produtos", texto: "A loja: produtos com foto, preço e estoque. O cliente compra pelo site e retira aqui." },
     { alvo: "nav-pedidos", titulo: "Pedidos da loja", texto: "Marque o pedido como pronto (o cliente é avisado) e depois como retirado." },

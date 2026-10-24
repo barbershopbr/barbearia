@@ -127,6 +127,15 @@ Claude Code via `CLAUDE.md`. O escopo completo do produto está em `ESCOPO.md`.
 - Fechamento mensal (`pote_fechamentos`) gera comissões tipo "assinatura"; reabrir apaga se nada foi pago.
   Barbeiro vê a prévia em Meu histórico.
 
+## Caixa / PDV (2026-10-24)
+- `caixas` (um aberto por empresa), `caixa_movimentos` (sangria/suprimento), vendas como
+  `pagamentos.tipo = balcao` com `caixa_id` (cliente opcional) e itens de serviço/produto.
+- "Agenda de hoje" no PDV cobra o atendimento (`pagamento_itens.agendamento_id`, único): conclui e
+  gera comissão/pote/pontos por `lib/agenda/concluir.ts` (mesmo caminho da agenda) — sem dobrar.
+- Helpers: `lib/estoque/baixar.ts`, `lib/comissoes/avulsa.ts`. Financeiro soma "Vendas no caixa" e
+  tira da receita da agenda os atendimentos cobrados no caixa.
+- Teste de actions por HTTP: FormData do encodeReply usa prefixo `_1_` (não `1_`).
+
 ## Próximos passos
 1. **Etapa 2 (Venda do SaaS)** do `ESCOPO.md`.
 

@@ -55,7 +55,7 @@ Recursos são ligados/desligados por plano (feature flags por empresa). 🆕
   chaves: botão "Conectar Mercado Pago" (OAuth), dinheiro cai direto na conta
   da barbearia. Outros gateways no futuro.
 - 🆕 Sinal / pagamento antecipado no agendamento — opcional por barbearia.
-- 🆕 Caixa / PDV no balcão (abrir/fechar caixa, venda de serviço + produto).
+- ✅ Caixa / PDV no balcão (abrir/fechar caixa, venda de serviço + produto, cobrar atendimento da agenda, sangria/suprimento).
 - 🆕 Relatórios avançados (faturamento por período/barbeiro/serviço, ticket
   médio, clientes sumidos, exportar Excel/PDF).
 - 🆕 Várias unidades no mesmo login.
