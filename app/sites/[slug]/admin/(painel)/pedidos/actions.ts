@@ -69,7 +69,7 @@ export async function marcarPedidoRetirado(pedidoId: string) {
   const supabase = await createSupabaseServerClient();
   const { data: atualizado } = await supabase
     .from("pagamentos")
-    .update({ status: "pago", separado: true, retirado_em: new Date().toISOString() })
+    .update({ status: "pago", separado: true, retirado_em: new Date().toISOString(), pago_em: new Date().toISOString() })
     .eq("id", pedidoId)
     .eq("status", "pendente") // evita baixar o estoque duas vezes em cliques repetidos
     .select("id")

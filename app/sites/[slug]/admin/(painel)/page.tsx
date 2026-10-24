@@ -15,6 +15,7 @@ type Atendimento = {
   status: AgendamentoStatus;
   desconto: number;
   funcionario_id: string;
+  assinatura_id: string | null;
   clientes: { nome: string } | null;
   servicos: { nome: string; preco: number } | null;
   funcionarios: { nome: string } | null;
@@ -23,7 +24,8 @@ type Atendimento = {
 const brl = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
 const hora = (iso: string) =>
   new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
-const valorLiquido = (a: Atendimento) => Number(a.servicos?.preco ?? 0) - Number(a.desconto ?? 0);
+// Atendimento de assinante já foi pago na mensalidade: não soma como faturamento de serviço.
+const valorLiquido = (a: Atendimento) => (a.assinatura_id ? 0 : Number(a.servicos?.preco ?? 0) - Number(a.desconto ?? 0));
 
 export default async function AdminDashboardPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -40,7 +42,7 @@ export default async function AdminDashboardPage({ params }: { params: Promise<{
   const mes = mesNoBrasil(hoje);
 
   const supabase = await createSupabaseServerClient();
-  const selectAtendimento = "id, data_hora_inicio, status, desconto, funcionario_id, clientes(nome), servicos(nome, preco), funcionarios(nome)";
+  const selectAtendimento = "id, data_hora_inicio, status, desconto, funcionario_id, assinatura_id, clientes(nome), servicos(nome, preco), funcionarios(nome)";
   const [{ data: doMes }, { count: clientesNovos }, { count: totalClientes }, { count: pedidosPendentes }] = await Promise.all([
     supabase
       .from("agendamentos")

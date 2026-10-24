@@ -16,7 +16,7 @@ export function AssinaturaStatusSelect({ assinaturaId, status }: { assinaturaId:
       disabled={pending}
       onValueChange={(value) => startTransition(() => updateAssinaturaStatus(assinaturaId, value as AssinaturaStatus))}
     >
-      <SelectTrigger className="ml-auto w-36">
+      <SelectTrigger className="w-36">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

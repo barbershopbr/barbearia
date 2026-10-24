@@ -116,6 +116,17 @@ Claude Code via `CLAUDE.md`. O escopo completo do produto está em `ESCOPO.md`.
   destaque com zoom nos itens `data-tour="nav-<seção>"`; "Ver tutorial" no menu reabre.
   Item novo no menu → incluir passo no roteiro.
 
+## Pote das assinaturas (2026-10-24)
+- Cálculo puro em `lib/comissoes/pote-calculo.ts` (testado com o exemplo do ESCOPO e variações);
+  dados/fechamento em `lib/comissoes/pote.ts`. Config em `empresas.pote_config`.
+- Mensalidade registrada no balcão (Admin → Assinaturas → Registrar pagamento) gera
+  `pagamentos` tipo assinatura com `pago_em`; empurra `data_proxima_cobranca`.
+- Ao concluir atendimento de cliente com assinatura ativa e pote ligado: grava
+  `agendamentos.assinatura_id` e NÃO gera comissão avulsa (corrige o pagamento em dobro).
+  Financeiro/dashboard não somam esses atendimentos como faturamento de serviço.
+- Fechamento mensal (`pote_fechamentos`) gera comissões tipo "assinatura"; reabrir apaga se nada foi pago.
+  Barbeiro vê a prévia em Meu histórico.
+
 ## Próximos passos
 1. **Etapa 2 (Venda do SaaS)** do `ESCOPO.md`.
 

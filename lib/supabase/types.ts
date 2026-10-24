@@ -19,7 +19,7 @@ export type AgendamentoStatus = "agendado" | "confirmado" | "concluido" | "cance
 export type PlanoPeriodo = "mensal" | "trimestral" | "anual";
 export type AssinaturaStatus = "ativa" | "cancelada" | "inadimplente" | "pendente";
 export type PagamentoTipo = "agendamento" | "assinatura" | "produto";
-export type PagamentoMetodo = "pix" | "cartao" | "cartao_recorrente" | "na_retirada";
+export type PagamentoMetodo = "pix" | "cartao" | "cartao_recorrente" | "na_retirada" | "dinheiro";
 export type PagamentoStatus = "pendente" | "pago" | "falhou" | "estornado" | "cancelado";
 export type ComissaoTipo = "servico" | "produto" | "assinatura" | "personalizada" | "diaria" | "mensal";
 export type RegraComissaoTipo = "percentual" | "fixo_por_servico" | "diaria" | "mensal";
@@ -52,6 +52,7 @@ export type Empresa = Timestamps & {
   recursos_extras: Record<string, boolean>;
   site_config: Record<string, unknown>;
   pagamentos_config: Record<string, unknown>;
+  pote_config: Record<string, unknown>;
   updated_at: string;
 };
 
@@ -116,6 +117,8 @@ export type Agendamento = Timestamps & {
   observacoes: string | null;
   cupom_id: string | null;
   desconto: number;
+  /** Preenchido ao concluir se o cliente tinha assinatura ativa (entra no pote). */
+  assinatura_id: string | null;
 };
 
 export type Categoria = Timestamps & {
@@ -260,6 +263,8 @@ export type Pagamento = Timestamps & {
   gateway_transacao_id: string | null;
   separado: boolean;
   retirado_em: string | null;
+  /** Quando o dinheiro entrou (base do financeiro e do pote). */
+  pago_em: string | null;
   cupom_id: string | null;
   desconto: number;
 };
@@ -283,6 +288,22 @@ export type Comissao = Timestamps & {
   percentual: number | null;
   periodo_pagamento: ComissaoPeriodo;
   status: "pendente" | "pago";
+  pote_fechamento_id: string | null;
+};
+
+export type PoteFechamento = Timestamps & {
+  id: string;
+  empresa_id: string;
+  competencia: string;
+  receita: number;
+  parte_casa: number;
+  pote: number;
+  total_pontos: number;
+  distribuido: number;
+  sobra: number;
+  sobra_destino: "casa" | "dividir" | "acumular";
+  detalhes: Record<string, unknown>;
+  fechado_por: string | null;
 };
 
 export type RegraComissao = Timestamps & {
@@ -408,6 +429,7 @@ export type Database = {
       bloqueios_agenda: TableDef<BloqueioAgenda>;
       integracoes: TableDef<Integracao>;
       notas_fiscais: TableDef<NotaFiscal>;
+      pote_fechamentos: TableDef<PoteFechamento>;
       promocoes: TableDef<Promocao>;
     };
     Views: {

@@ -37,21 +37,26 @@ export default async function FinanceiroPage({
   const { primeiroDia: inicioMesStr, ultimoDia: fimMesStr, inicio: inicioMes, fim: fimMes } = mesNoBrasil(`${mes}-01`);
   const nomeMes = new Date(`${mes}-15T12:00:00Z`).toLocaleDateString("pt-BR", { month: "long", year: "numeric", timeZone: "UTC" });
 
-  const [{ data: agendamentosConcluidos }, { data: assinaturasAtivas }, { data: despesas }, { data: vendasProdutos }] = await Promise.all([
+  const [{ data: agendamentosConcluidos }, { data: mensalidadesPagas }, { data: despesas }, { data: vendasProdutos }] = await Promise.all([
     supabase
       .from("agendamentos")
       .select("id, desconto, servicos(preco)")
       .eq("empresa_id", empresa.id)
       .eq("status", "concluido")
+      .is("assinatura_id", null) // atendimento de assinante já entrou pela mensalidade
       .gte("data_hora_inicio", inicioMes.toISOString())
       .lte("data_hora_inicio", fimMes.toISOString()) as unknown as Promise<{
       data: { id: string; desconto: number; servicos: { preco: number } | null }[] | null;
     }>,
+    // Mensalidades efetivamente pagas no mês (balcão ou online).
     supabase
-      .from("assinaturas_clientes")
-      .select("id, planos(valor)")
+      .from("pagamentos")
+      .select("valor")
       .eq("empresa_id", empresa.id)
-      .eq("status", "ativa") as unknown as Promise<{ data: { id: string; planos: { valor: number } | null }[] | null }>,
+      .eq("tipo", "assinatura")
+      .eq("status", "pago")
+      .gte("pago_em", inicioMes.toISOString())
+      .lte("pago_em", fimMes.toISOString()),
     supabase
       .from("despesas")
       .select("*")
@@ -73,7 +78,7 @@ export default async function FinanceiroPage({
     (s, a) => s + Number(a.servicos?.preco ?? 0) - Number(a.desconto ?? 0),
     0,
   );
-  const receitaAssinaturas = (assinaturasAtivas ?? []).reduce((s, a) => s + Number(a.planos?.valor ?? 0), 0);
+  const receitaAssinaturas = (mensalidadesPagas ?? []).reduce((s, p) => s + Number(p.valor), 0);
   const totalDespesas = (despesas ?? []).reduce((s, d) => s + Number(d.valor), 0);
   const receitaProdutos = (vendasProdutos ?? [])
     .filter((p) => p.status === "pago")
@@ -83,7 +88,7 @@ export default async function FinanceiroPage({
 
   const cards = [
     { label: "Receita de serviços (mês)", value: receitaServicos },
-    { label: "Receita de assinaturas ativas", value: receitaAssinaturas },
+    { label: "Mensalidades recebidas (mês)", value: receitaAssinaturas },
     { label: "Vendas de produtos (mês)", value: receitaProdutos },
     { label: "Despesas (mês)", value: -totalDespesas },
     { label: "Saldo do mês", value: saldo, destaque: true },

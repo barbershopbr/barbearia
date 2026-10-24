@@ -2,6 +2,9 @@ import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import { getCurrentStaff } from "@/lib/auth/current-staff";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { lerConfigPote } from "@/lib/comissoes/pote-calculo";
+import { previaPote } from "@/lib/comissoes/pote";
+import { hojeNoBrasil } from "@/lib/tenant/timezone";
 import { Badge } from "@/components/ui/badge";
 
 type AgendamentoLinha = {
@@ -61,6 +64,12 @@ export default async function MeuHistoricoPage({ params }: { params: Promise<{ s
       .order("created_at", { ascending: false }) as unknown as Promise<{ data: ComissaoLinha[] | null }>,
   ]);
 
+  // Prévia do pote do mês: o barbeiro vê só a própria linha (pontos e valor estimado).
+  const pote = lerConfigPote(empresa.pote_config).ativo
+    ? await previaPote(empresa.id, hojeNoBrasil().slice(0, 7), empresa.pote_config)
+    : null;
+  const minhaLinhaPote = pote?.resultado.linhas.find((l) => l.funcionarioId === funcionario.id);
+
   const totalPendente = (comissoes ?? []).filter((c) => c.status === "pendente").reduce((s, c) => s + Number(c.valor ?? 0), 0);
   const totalPago = (comissoes ?? []).filter((c) => c.status === "pago").reduce((s, c) => s + Number(c.valor ?? 0), 0);
 
@@ -80,6 +89,20 @@ export default async function MeuHistoricoPage({ params }: { params: Promise<{ s
           <CardHeader><CardTitle className="text-sm font-normal text-muted-foreground">Já recebido</CardTitle></CardHeader>
           <CardContent><p className="text-2xl font-semibold">R$ {totalPago.toFixed(2)}</p></CardContent>
         </Card>
+        {pote && (
+          <Card className="sm:col-span-2">
+            <CardHeader>
+              <CardTitle className="text-sm font-normal text-muted-foreground">Pote das assinaturas — prévia deste mês</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              <p className="text-2xl font-semibold">R$ {(minhaLinhaPote?.valor ?? 0).toFixed(2)}</p>
+              <p className="text-xs text-muted-foreground">
+                {minhaLinhaPote?.atendimentos ?? 0} atendimento(s) de assinante · {(minhaLinhaPote?.pontos ?? 0).toLocaleString("pt-BR")} pontos.
+                O valor muda até o fim do mês, conforme as mensalidades pagas e os atendimentos da equipe.
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <section className="space-y-3">

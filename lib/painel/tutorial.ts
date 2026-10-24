@@ -28,6 +28,7 @@ export function passosTutorial(nomeBarbearia: string): PassoTour[] {
     { alvo: "nav-produtos", titulo: "Produtos", texto: "A loja: produtos com foto, preço e estoque. O cliente compra pelo site e retira aqui." },
     { alvo: "nav-pedidos", titulo: "Pedidos da loja", texto: "Marque o pedido como pronto (o cliente é avisado) e depois como retirado." },
     { alvo: "nav-planos", titulo: "Planos de assinatura", texto: "Crie o clube de assinatura da barbearia e tenha receita todo mês." },
+    { alvo: "nav-pote", titulo: "Pote das assinaturas", texto: "Como os barbeiros recebem pelos atendimentos de assinantes: o pote do mês é dividido pelos pontos de cada um." },
     {
       alvo: "nav-pagamentos",
       titulo: "Recebimentos",

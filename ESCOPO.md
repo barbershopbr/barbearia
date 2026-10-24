@@ -69,7 +69,7 @@ Recursos são ligados/desligados por plano (feature flags por empresa). 🆕
 - 🆕 % sobre venda de produtos.
 - 🆕 Opção de descontar taxa da maquininha antes de calcular.
 
-### Pote das assinaturas 🆕
+### Pote das assinaturas ✅
 Comissão dos barbeiros sobre atendimentos de clientes assinantes.
 
 **Regra fixa de cálculo:**
