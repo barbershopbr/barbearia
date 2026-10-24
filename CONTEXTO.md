@@ -23,8 +23,25 @@ Claude Code via `CLAUDE.md`. O escopo completo do produto está em `ESCOPO.md`.
   de trocar os nameservers para a Cloudflare.
 - Hospedagem: **Cloudflare**. Faltam **Mercado Pago** (etapa 2) e Resend (chave).
 
+## Deploy de teste (2026-10-24)
+- Worker `usebrcontrol` em https://usebrcontrol.usebrcontrol.workers.dev (modo por
+  caminho: `/master/login`, `/sites/{slug}`, `/sites/{slug}/admin/login`).
+- Vars públicas no `wrangler.jsonc` (inclui `APP_ORIGIN` — remover quando o DNS do
+  domínio apontar pro Worker). Secret: `SUPABASE_SERVICE_ROLE_KEY`.
+- Deploy: `npm run cf:deploy`. Migrations: `npx supabase db push --db-url ...`
+  (pooler `aws-1-sa-east-1`, usuário `postgres.ifaqsuxxrinpgzfvqvva`).
+- Contas de teste: Master `endrew.barbershop@gmail.com`; barbearia `barbearia-teste`
+  (Premium) com dono `endrew.barbershop+teste@gmail.com`. Senhas passadas no chat.
+
+## Etapa 1 (Base) — feito
+- Plano do SaaS por empresa (`plano_saas` + `recursos_extras`), mapa em
+  `lib/plano/recursos.ts`; Master escolhe plano e exceções.
+- E-mail: `lib/email/send.ts` (Resend REST). Reset de senha do cliente envia e-mail.
+- **Pendente:** `RESEND_API_KEY` (secret) e `EMAIL_FROM` com domínio verificado no
+  Resend; mover DNS do domínio para a Cloudflare.
+
 ## Próximos passos
-1. **Etapa 1 (Base)** do `ESCOPO.md`.
+1. **Etapa 2 (Venda do SaaS)** do `ESCOPO.md`.
 
 ## Git
 - Repo privado: https://github.com/barbershopbr/barbearia (branch `main`), commit inicial em 2026-10-24.
