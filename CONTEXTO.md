@@ -107,6 +107,15 @@ Claude Code via `CLAUDE.md`. O escopo completo do produto está em `ESCOPO.md`.
   `BLING_CLIENT_SECRET` e a emissão em si (disparada quando os pagamentos online existirem).
   Refresh token do Bling vence em 30 dias sem uso — prever renovação periódica (cron).
 
+## Site como mini e-commerce + tutorial (2026-10-24)
+- Site da barbearia: barra fixa (Agendar, Produtos, Meus horários, conta, carrinho com total),
+  bloco do cliente logado (próximos horários + pedidos), loja com categorias e "Esgotado"
+  (`produtos_publicos.disponivel`/`categoria_nome`).
+- Tutorial guiado do painel (`components/tour-painel.tsx`, roteiro em `lib/painel/tutorial.ts`):
+  abre no 1º acesso de cada pessoa (`usuarios_empresa.tutorial_visto_em`), Próximo/Voltar/Pular,
+  destaque com zoom nos itens `data-tour="nav-<seção>"`; "Ver tutorial" no menu reabre.
+  Item novo no menu → incluir passo no roteiro.
+
 ## Próximos passos
 1. **Etapa 2 (Venda do SaaS)** do `ESCOPO.md`.
 

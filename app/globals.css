@@ -164,3 +164,19 @@
   content: "";
   @apply absolute inset-1 rounded-full border border-current opacity-40;
 }
+/* Tutorial do painel (components/tour-painel.tsx): o destaque "dá zoom" no
+   elemento da vez — entra maior e assenta no tamanho certo — e pulsa leve. */
+@keyframes tour-zoom {
+  from { transform: scale(1.35); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes tour-pulso {
+  0%, 100% { box-shadow: 0 0 0 9999px rgb(0 0 0 / 0.6), 0 0 0 3px var(--tour-cor, #c8a24a); }
+  50% { box-shadow: 0 0 0 9999px rgb(0 0 0 / 0.6), 0 0 0 7px var(--tour-cor, #c8a24a); }
+}
+.tour-destaque {
+  animation: tour-zoom 0.35s ease-out, tour-pulso 1.6s ease-in-out 0.35s infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tour-destaque { animation: none; box-shadow: 0 0 0 9999px rgb(0 0 0 / 0.6), 0 0 0 3px var(--tour-cor, #c8a24a); }
+}

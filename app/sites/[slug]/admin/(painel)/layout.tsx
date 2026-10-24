@@ -5,7 +5,10 @@ import { Scissors } from "lucide-react";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import { getCurrentStaff } from "@/lib/auth/current-staff";
 import { tenantBasePath } from "@/lib/tenant/base-path";
-import { signOutStaff } from "../actions";
+import { marcarTutorialVisto, signOutStaff } from "../actions";
+import { TourPainel, BotaoVerTutorial } from "@/components/tour-painel";
+import { passosTutorial } from "@/lib/painel/tutorial";
+import { tenantOrigin } from "@/lib/tenant/domain";
 import { Button } from "@/components/ui/button";
 import { PLANOS_SAAS, temRecurso, type Recurso } from "@/lib/plano/recursos";
 import { PAPEL_LABEL, nivelSecao, podeAcessarSecao, secaoDoCaminho, secaoInicial } from "@/lib/auth/papeis";
@@ -74,13 +77,26 @@ export default async function AdminPainelLayout({
             <Link
               key={item.href}
               href={`${base}${item.href}`}
+              data-tour={`nav-${item.href.replace(/^\/admin\/?/, "") || "inicio"}`}
               className="block rounded px-2 py-1.5 text-sm tracking-wide uppercase hover:bg-sidebar-accent"
             >
               {item.label}
             </Link>
           ))}
         </nav>
-        <div className="mt-6 border-t border-sidebar-border pt-4">
+        <div className="mt-6 space-y-1 border-t border-sidebar-border pt-4">
+          <a
+            href={tenantOrigin(slug)}
+            target="_blank"
+            rel="noreferrer"
+            data-tour="ver-site"
+            className="block rounded px-2 py-1.5 text-sm tracking-wide uppercase hover:bg-sidebar-accent"
+          >
+            Ver meu site ↗
+          </a>
+          <BotaoVerTutorial className="block w-full rounded px-2 py-1.5 text-left text-xs text-sidebar-foreground/70 hover:bg-sidebar-accent" />
+        </div>
+        <div className="mt-4 border-t border-sidebar-border pt-4">
           <p className="mb-1 text-xs text-sidebar-foreground/60">Plano {PLANOS_SAAS[empresa.plano_saas].nome}</p>
           <p className="mb-2 text-xs text-sidebar-foreground/60">{staff.nome} · {PAPEL_LABEL[staff.role]}</p>
           <form action={signOutStaff.bind(null, slug)}>
@@ -98,6 +114,11 @@ export default async function AdminPainelLayout({
         )}
         {children}
       </main>
+      <TourPainel
+        passos={passosTutorial(empresa.nome)}
+        iniciarAberto={!staff.tutorial_visto_em}
+        aoConcluir={marcarTutorialVisto.bind(null, slug)}
+      />
     </div>
   );
 }

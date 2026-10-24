@@ -63,6 +63,7 @@ export type UsuarioEmpresa = Timestamps & {
   email: string;
   role: UsuarioEmpresaRole;
   permissions: Record<string, unknown>;
+  tutorial_visto_em: string | null;
   ativo: boolean;
 };
 
