@@ -138,7 +138,11 @@ export type Produto = Timestamps & {
 };
 
 /** Linha da view produtos_publicos (vitrine do site; sem custo/estoque). */
-export type ProdutoPublico = Pick<Produto, "id" | "empresa_id" | "categoria_id" | "nome" | "descricao" | "preco" | "ativo" | "created_at" | "foto_url">;
+export type ProdutoPublico = Pick<Produto, "id" | "empresa_id" | "categoria_id" | "nome" | "descricao" | "preco" | "ativo" | "created_at" | "foto_url"> & {
+  categoria_nome: string | null;
+  /** Tem estoque (a quantidade não é exposta ao público). */
+  disponivel: boolean;
+};
 
 export type BloqueioAgenda = Timestamps & {
   id: string;

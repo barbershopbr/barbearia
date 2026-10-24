@@ -7,6 +7,7 @@ export type CartItem = {
   nome: string;
   preco: number;
   quantidade: number;
+  foto?: string | null;
 };
 
 type CartContextValue = {
@@ -42,18 +43,21 @@ export function CartProvider({ slug, children }: { slug: string; children: React
     // lint de "setState dentro de efeito" é esperado aqui.
     try {
       const raw = window.localStorage.getItem(storageKey);
-      console.log("[cart-debug] storageKey", storageKey, "raw", raw);
       // eslint-disable-next-line react-hooks/set-state-in-effect
       if (raw) setItems(JSON.parse(raw));
-    } catch (e) {
-      console.log("[cart-debug] erro ao ler localStorage", e);
+    } catch {
+      // localStorage indisponível (aba anônima, bloqueado): segue com carrinho vazio.
     }
     setHydrated(true);
   }, [storageKey]);
 
   useEffect(() => {
     if (!hydrated) return;
-    window.localStorage.setItem(storageKey, JSON.stringify(items));
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(items));
+    } catch {
+      // sem armazenamento: o carrinho vale só enquanto a página estiver aberta
+    }
   }, [items, hydrated, storageKey]);
 
   const addItem = useCallback<CartContextValue["addItem"]>((item, quantidade = 1) => {

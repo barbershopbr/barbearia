@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { SolicitarPlanoButton } from "./solicitar-plano-button";
 import { CartWidget } from "./cart-widget";
-import { AddToCartButton } from "./add-to-cart-button";
+import { LojaGrid } from "./loja-grid";
 
 const DIAS_SEMANA: Record<string, string> = {
   segunda: "Segunda",
@@ -96,6 +96,30 @@ export default async function TenantHomePage({ params }: { params: Promise<{ slu
     supabase.from("promocoes").select("*").eq("empresa_id", empresa.id).order("ordem").order("created_at"),
   ]);
 
+  // Cliente logado: próximos horários e pedidos ainda não retirados.
+  const [{ data: proximosRaw }, { count: pedidosAbertosCount }] = cliente
+    ? await Promise.all([
+        supabase
+          .from("agendamentos")
+          .select("id, data_hora_inicio, servicos(nome), funcionarios(nome)")
+          .eq("cliente_id", cliente.id)
+          .in("status", ["agendado", "confirmado"])
+          .gte("data_hora_inicio", new Date().toISOString())
+          .order("data_hora_inicio")
+          .limit(3) as unknown as Promise<{
+          data: { id: string; data_hora_inicio: string; servicos: { nome: string } | null; funcionarios: { nome: string } | null }[] | null;
+        }>,
+        supabase
+          .from("pagamentos")
+          .select("id", { count: "exact", head: true })
+          .eq("cliente_id", cliente.id)
+          .eq("tipo", "produto")
+          .eq("status", "pendente"),
+      ])
+    : [{ data: null }, { count: 0 }];
+  const proximosCliente = proximosRaw ?? [];
+  const pedidosAbertos = pedidosAbertosCount ?? 0;
+
   // Seções que dependem do plano do SaaS somem do site quando o recurso não está liberado.
   const planos = temRecurso(empresa, "assinaturas") ? (planosTodos ?? []) : [];
   const produtos = temRecurso(empresa, "loja") ? (produtosTodos ?? []) : [];
@@ -106,22 +130,48 @@ export default async function TenantHomePage({ params }: { params: Promise<{ slu
   const cta = (servicos ?? []).length > 0 ? `${base}/agendar` : null;
   const card = tema === "minimal" ? "border shadow-none" : "border-2";
 
+  // Barra fixa no topo (mini e-commerce): atalhos, conta e carrinho sempre à mão.
+  const escuro = tema !== "minimal";
   const nav = (
     <nav
       className={cn(
-        "z-20 flex items-center justify-between px-4 py-4 sm:px-8",
-        tema === "minimal" ? "relative border-b" : "absolute inset-x-0 top-0 text-white",
+        "sticky top-0 z-40 flex items-center justify-between gap-3 px-4 py-3 sm:px-8",
+        escuro ? "text-white shadow-md" : "border-b bg-background/90 backdrop-blur",
       )}
+      style={escuro ? { backgroundColor: "var(--tenant-primary)" } : undefined}
     >
-      <span className={cn("text-sm font-semibold", tema === "minimal" ? "tracking-tight" : "font-heading tracking-[0.2em] uppercase")}>
-        {empresa.nome}
-      </span>
-      <div className="flex items-center gap-2">
-        {produtos.length > 0 && <CartWidget slug={slug} loggedIn={!!cliente} entrarHref={`${base}/area-cliente/login`} />}
+      <a href="#" className="flex min-w-0 items-center gap-2">
+        {empresa.logo_url && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={empresa.logo_url} alt="" className="size-8 shrink-0 rounded-full bg-white object-cover" />
+        )}
+        <span className={cn("truncate text-sm font-semibold", escuro ? "font-heading tracking-[0.2em] uppercase" : "tracking-tight")}>
+          {empresa.nome}
+        </span>
+      </a>
+      <div className="flex items-center gap-1 sm:gap-2">
+        <div className={cn("hidden items-center gap-1 text-sm md:flex", escuro ? "text-white/80" : "text-muted-foreground")}>
+          {cta && (
+            <Link href={cta} className="rounded px-2 py-1 hover:opacity-100 hover:underline">
+              Agendar
+            </Link>
+          )}
+          {produtos.length > 0 && (
+            <a href="#produtos" className="rounded px-2 py-1 hover:underline">
+              Produtos
+            </a>
+          )}
+          {cliente && (
+            <Link href={`${base}/area-cliente`} className="rounded px-2 py-1 hover:underline">
+              Meus horários
+            </Link>
+          )}
+        </div>
+        {produtos.length > 0 && <CartWidget slug={slug} loggedIn={!!cliente} entrarHref={`${base}/area-cliente/login`} escuro={escuro} />}
         <Button
           variant="outline"
           size="sm"
-          className={tema === "minimal" ? "" : "border-white/40 bg-white/10 text-white hover:bg-white/20"}
+          className={escuro ? "border-white/40 bg-white/10 text-white hover:bg-white/20" : ""}
           render={
             <Link href={cliente ? `${base}/area-cliente` : `${base}/entrar`}>{cliente ? cliente.nome.split(" ")[0] : "Entrar"}</Link>
           }
@@ -196,24 +246,10 @@ export default async function TenantHomePage({ params }: { params: Promise<{ slu
       produtos.length > 0 ? (
         <section id="produtos" className="space-y-6">
           <SectionTitle tema={tema}>Produtos</SectionTitle>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {produtos.map((p) => (
-              <Card key={p.id} className={cn(card, p.foto_url && "overflow-hidden pt-0")}>
-                {p.foto_url && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.foto_url} alt={p.nome} className="aspect-square w-full object-cover" />
-                )}
-                <CardHeader>
-                  <CardTitle className={tema === "minimal" ? "text-base" : "font-heading text-base tracking-wide uppercase"}>{p.nome}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm text-muted-foreground">
-                  {p.descricao && <p>{p.descricao}</p>}
-                  <p className="font-medium text-foreground">{brl(p.preco)}</p>
-                  <AddToCartButton produtoId={p.id} nome={p.nome} preco={Number(p.preco)} />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <p className="text-center text-sm text-muted-foreground sm:text-left">
+            Coloque no carrinho e retire na barbearia — paga na hora da retirada.
+          </p>
+          <LojaGrid produtos={produtos} minimal={tema === "minimal"} card={card} />
         </section>
       ) : null,
 
@@ -386,6 +422,7 @@ export default async function TenantHomePage({ params }: { params: Promise<{ slu
   return (
     // Clássico usa o esquema escuro em todo o site; os outros, o claro.
     <div className={cn("min-h-screen bg-background text-foreground", tema === "classico" && "dark")}>
+      {nav}
       {tema === "classico" && (
         <header
           className="grain relative flex min-h-[70vh] flex-col items-center justify-center gap-4 overflow-hidden px-4 py-24 text-center text-white"
@@ -395,7 +432,6 @@ export default async function TenantHomePage({ params }: { params: Promise<{ slu
             <div className="absolute inset-0 bg-cover bg-center opacity-50" style={{ backgroundImage: `url(${empresa.banner_url})` }} />
           )}
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/90" />
-          {nav}
           <div className="relative z-10 flex flex-col items-center gap-4">
             <Logo empresa={empresa} className="size-28 border-2 border-white text-white" />
             <h1 className="font-heading text-4xl font-bold tracking-[0.08em] uppercase sm:text-5xl">{titulo}</h1>
@@ -411,8 +447,7 @@ export default async function TenantHomePage({ params }: { params: Promise<{ slu
 
       {tema === "moderno" && (
         <header className="relative grid min-h-[70vh] text-white md:grid-cols-2" style={{ backgroundColor: "var(--tenant-primary)" }}>
-          {nav}
-          <div className="flex flex-col justify-center gap-5 px-6 pt-24 pb-12 sm:px-12">
+          <div className="flex flex-col justify-center gap-5 px-6 py-12 sm:px-12">
             <Logo empresa={empresa} className="size-16 border border-white/60 text-white" />
             <h1 className="font-heading text-4xl leading-tight font-bold uppercase sm:text-6xl">{titulo}</h1>
             <div className="h-1 w-16 rounded" style={{ backgroundColor: corDestaque }} />
@@ -437,7 +472,6 @@ export default async function TenantHomePage({ params }: { params: Promise<{ slu
 
       {tema === "minimal" && (
         <header className="bg-background">
-          {nav}
           <div className="mx-auto flex max-w-3xl flex-col items-center gap-5 px-4 py-20 text-center">
             <Logo empresa={empresa} className="size-20 border" />
             <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">{titulo}</h1>
@@ -456,6 +490,56 @@ export default async function TenantHomePage({ params }: { params: Promise<{ slu
       )}
 
       <main className="mx-auto max-w-5xl space-y-16 px-4 py-16">
+        {cliente && (
+          // Área rápida do cliente logado: próximos horários e pedidos em andamento.
+          <section className="space-y-3 rounded-xl border bg-card p-5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-lg font-semibold">Olá, {cliente.nome.split(" ")[0]}!</h2>
+              <div className="flex gap-2 text-sm">
+                <Link href={`${base}/area-cliente`} className="underline-offset-4 hover:underline">
+                  Meus horários
+                </Link>
+                <span className="text-muted-foreground">·</span>
+                <Link href={`${base}/area-cliente/pagamentos`} className="underline-offset-4 hover:underline">
+                  Meus pedidos{pedidosAbertos > 0 ? ` (${pedidosAbertos})` : ""}
+                </Link>
+              </div>
+            </div>
+            {proximosCliente.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Você não tem horário marcado.{" "}
+                {cta && (
+                  <Link href={cta} className="font-medium underline-offset-4 hover:underline" style={{ color: corDestaque }}>
+                    Agendar agora
+                  </Link>
+                )}
+              </p>
+            ) : (
+              <ul className="divide-y text-sm">
+                {proximosCliente.map((a) => (
+                  <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                    <span>
+                      <strong>
+                        {new Date(a.data_hora_inicio).toLocaleString("pt-BR", {
+                          weekday: "short",
+                          day: "2-digit",
+                          month: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          timeZone: "America/Sao_Paulo",
+                        })}
+                      </strong>{" "}
+                      · {a.servicos?.nome} com {a.funcionarios?.nome}
+                    </span>
+                    <Link href={`${base}/agendar?remarcar=${a.id}`} className="text-xs text-muted-foreground underline-offset-4 hover:underline">
+                      Remarcar
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
         {config.secoes
           .filter((s) => s.visivel && secoes[s.id])
           .map((s) => (

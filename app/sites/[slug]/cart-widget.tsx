@@ -10,7 +10,18 @@ import { useCart } from "@/lib/cart/cart-context";
 import { criarPedido } from "./pedido-actions";
 import { validarCupom } from "./cupom-actions";
 
-export function CartWidget({ slug, loggedIn, entrarHref }: { slug: string; loggedIn: boolean; entrarHref: string }) {
+export function CartWidget({
+  slug,
+  loggedIn,
+  entrarHref,
+  escuro = true,
+}: {
+  slug: string;
+  loggedIn: boolean;
+  entrarHref: string;
+  /** Barra escura (temas Clássico/Moderno) ou clara (Minimalista). */
+  escuro?: boolean;
+}) {
   const { items, count, total, updateQuantidade, removeItem, clear } = useCart();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -60,8 +71,14 @@ export function CartWidget({ slug, loggedIn, entrarHref }: { slug: string; logge
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button variant="outline" size="sm" className="relative border-white/40 bg-white/10 text-white hover:bg-white/20">
+          <Button
+            variant="outline"
+            size="sm"
+            className={escuro ? "relative border-white/40 bg-white/10 text-white hover:bg-white/20" : "relative"}
+            aria-label="Abrir carrinho"
+          >
             <ShoppingBag className="size-4" />
+            {count > 0 && <span className="hidden text-xs tabular-nums sm:inline">R$ {total.toFixed(2).replace(".", ",")}</span>}
             {count > 0 && (
               <span className="absolute -top-2 -right-2 flex size-5 items-center justify-center rounded-full bg-destructive text-xs text-destructive-foreground">
                 {count}
@@ -82,6 +99,10 @@ export function CartWidget({ slug, loggedIn, entrarHref }: { slug: string; logge
             <div className="space-y-3">
               {items.map((item) => (
                 <div key={item.produtoId} className="flex items-center justify-between gap-2 border-b pb-2 last:border-0">
+                  {item.foto && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={item.foto} alt="" className="size-10 shrink-0 rounded object-cover" />
+                  )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{item.nome}</p>
                     <p className="text-xs text-muted-foreground">R$ {item.preco.toFixed(2)} cada</p>
@@ -95,8 +116,8 @@ export function CartWidget({ slug, loggedIn, entrarHref }: { slug: string; logge
                       +
                     </Button>
                   </div>
-                  <Button type="button" size="sm" variant="destructive" onClick={() => removeItem(item.produtoId)}>
-                    Remover
+                  <Button type="button" size="icon-sm" variant="ghost" aria-label="Remover" onClick={() => removeItem(item.produtoId)}>
+                    ✕
                   </Button>
                 </div>
               ))}

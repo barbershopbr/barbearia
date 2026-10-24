@@ -27,11 +27,16 @@ export async function criarPedido(
   const produtoIds = itens.map((i) => i.produtoId);
   const { data: produtos } = await supabase
     .from("produtos_publicos")
-    .select("id, preco, ativo")
+    .select("id, preco, ativo, disponivel, nome")
     .eq("empresa_id", empresa.id)
     .in("id", produtoIds);
 
   const produtoPorId = new Map((produtos ?? []).map((p) => [p.id, p]));
+  const esgotados = itens.filter((i) => produtoPorId.get(i.produtoId) && !produtoPorId.get(i.produtoId)!.disponivel);
+  if (esgotados.length > 0) {
+    const nomes = esgotados.map((i) => produtoPorId.get(i.produtoId)!.nome).join(", ");
+    return { error: `Sem estoque no momento: ${nomes}. Remova do carrinho para continuar.` };
+  }
   const itensValidos = itens.filter((i) => produtoPorId.get(i.produtoId)?.ativo);
 
   if (itensValidos.length === 0) {
