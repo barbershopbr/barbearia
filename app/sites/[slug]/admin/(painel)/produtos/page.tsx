@@ -8,11 +8,14 @@ import { CategoriaQuickAdd } from "./categoria-quick-add";
 import { EstoqueAdjust } from "./estoque-adjust";
 import { EntradaEstoqueDialog } from "./entrada-estoque";
 import { toggleProdutoAtivo, deleteProduto } from "./actions";
+import { temRecurso } from "@/lib/plano/recursos";
+import { RecursoBloqueado } from "@/components/recurso-bloqueado";
 
 export default async function ProdutosPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return null;
+  if (!temRecurso(empresa, "loja")) return <RecursoBloqueado recurso="loja" />;
 
   const supabase = await createSupabaseServerClient();
   const [{ data: produtos }, { data: categorias }, { data: fornecedores }] = await Promise.all([

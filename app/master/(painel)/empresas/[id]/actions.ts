@@ -5,6 +5,8 @@ import { requireMaster } from "@/lib/auth/current-master";
 import { invalidateDomainCache } from "@/lib/tenant/domain";
 import { createCustomHostname, deleteCustomHostname, getCustomHostnameStatus, isCloudflareConfigured } from "@/lib/cloudflare/custom-hostnames";
 import type { ActionState } from "../../../../sites/[slug]/area-cliente/actions";
+import { PLANOS_SAAS, RECURSO_LABEL } from "@/lib/plano/recursos";
+import type { PlanoSaas } from "@/lib/supabase/types";
 
 const DOMINIO_REGEX = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/;
 
@@ -38,6 +40,33 @@ export async function updateEmpresaDetalhes(
   if (error) return { error: "Não foi possível salvar as alterações." };
 
   return { success: "Dados atualizados." };
+}
+
+export async function updateEmpresaPlano(
+  empresaId: string,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await requireMaster();
+
+  const plano = String(formData.get("plano_saas") ?? "") as PlanoSaas;
+  if (!(plano in PLANOS_SAAS)) return { error: "Plano inválido." };
+
+  const recursosExtras: Record<string, boolean> = {};
+  for (const recurso of Object.keys(RECURSO_LABEL)) {
+    const valor = formData.get(`recurso_${recurso}`);
+    if (valor === "liberado") recursosExtras[recurso] = true;
+    if (valor === "bloqueado") recursosExtras[recurso] = false;
+  }
+
+  const admin = createSupabaseServiceRoleClient();
+  const { error } = await admin
+    .from("empresas")
+    .update({ plano_saas: plano, recursos_extras: recursosExtras })
+    .eq("id", empresaId);
+
+  if (error) return { error: "Não foi possível salvar o plano." };
+  return { success: `Plano ${PLANOS_SAAS[plano].nome} salvo.` };
 }
 
 export async function configurarDominioEmpresa(

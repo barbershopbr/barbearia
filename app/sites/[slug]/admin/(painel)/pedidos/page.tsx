@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toggleSeparado } from "./actions";
+import { temRecurso } from "@/lib/plano/recursos";
+import { RecursoBloqueado } from "@/components/recurso-bloqueado";
 
 type PedidoLinha = {
   id: string;
@@ -19,6 +21,7 @@ export default async function PedidosPage({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return null;
+  if (!temRecurso(empresa, "loja")) return <RecursoBloqueado recurso="loja" />;
 
   const supabase = await createSupabaseServerClient();
   const { data: pedidos } = (await supabase

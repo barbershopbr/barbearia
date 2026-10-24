@@ -4,11 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { NovoFornecedorDialog } from "./fornecedor-form";
 import { deleteFornecedor } from "./actions";
+import { temRecurso } from "@/lib/plano/recursos";
+import { RecursoBloqueado } from "@/components/recurso-bloqueado";
 
 export default async function FornecedoresPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return null;
+  if (!temRecurso(empresa, "loja")) return <RecursoBloqueado recurso="loja" />;
 
   const supabase = await createSupabaseServerClient();
   const { data: fornecedores } = await supabase

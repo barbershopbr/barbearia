@@ -13,6 +13,7 @@ type Timestamps = {
 
 export type EmpresaStatus = "ativo" | "inativo" | "bloqueado" | "excluida";
 export type EmpresaDominioStatus = "pendente" | "verificado" | "falhou";
+export type PlanoSaas = "basico" | "pro" | "premium";
 export type UsuarioEmpresaRole = "owner" | "admin" | "barbeiro" | "recepcionista";
 export type AgendamentoStatus = "agendado" | "confirmado" | "concluido" | "cancelado" | "falta";
 export type PlanoPeriodo = "mensal" | "trimestral" | "anual";
@@ -47,6 +48,8 @@ export type Empresa = Timestamps & {
   dominio_cloudflare_id: string | null;
   favicon_url: string | null;
   cnpj: string | null;
+  plano_saas: PlanoSaas;
+  recursos_extras: Record<string, boolean>;
   updated_at: string;
 };
 

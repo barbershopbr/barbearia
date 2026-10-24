@@ -5,11 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { NovaDespesaDialog } from "./despesa-form";
 import { deleteDespesa } from "./actions";
+import { temRecurso } from "@/lib/plano/recursos";
+import { RecursoBloqueado } from "@/components/recurso-bloqueado";
 
 export default async function FinanceiroPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return null;
+  if (!temRecurso(empresa, "financeiro")) return <RecursoBloqueado recurso="financeiro" />;
 
   const supabase = await createSupabaseServerClient();
 

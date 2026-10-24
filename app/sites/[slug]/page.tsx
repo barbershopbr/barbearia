@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { SolicitarPlanoButton } from "./solicitar-plano-button";
 import { CartWidget } from "./cart-widget";
 import { AddToCartButton } from "./add-to-cart-button";
+import { temRecurso } from "@/lib/plano/recursos";
 
 const DIAS_SEMANA: Record<string, string> = {
   segunda: "Segunda",
@@ -40,12 +41,16 @@ export default async function TenantHomePage({ params }: { params: Promise<{ slu
   const supabase = await createSupabaseServerClient();
   const base = await tenantBasePath(slug);
 
-  const [{ data: servicos }, { data: funcionarios }, { data: planos }, { data: produtos }] = await Promise.all([
+  const [{ data: servicos }, { data: funcionarios }, { data: planosTodos }, { data: produtosTodos }] = await Promise.all([
     supabase.from("servicos").select("*").eq("empresa_id", empresa.id).eq("ativo", true).order("nome"),
     supabase.from("funcionarios").select("*").eq("empresa_id", empresa.id).eq("ativo", true).order("nome"),
     supabase.from("planos").select("*").eq("empresa_id", empresa.id).eq("ativo", true).order("valor"),
     supabase.from("produtos").select("*").eq("empresa_id", empresa.id).eq("ativo", true).order("nome"),
   ]);
+
+  // Seções que dependem do plano do SaaS somem do site quando o recurso não está liberado.
+  const planos = temRecurso(empresa, "assinaturas") ? planosTodos : null;
+  const produtos = temRecurso(empresa, "loja") ? produtosTodos : null;
 
   const horarios = (empresa.horarios ?? {}) as Record<string, { abre?: string; fecha?: string; fechado?: boolean }>;
 

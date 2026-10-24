@@ -3,6 +3,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import type { RegraComissaoTipo } from "@/lib/supabase/types";
+import { exigirRecurso } from "@/lib/plano/recursos";
 
 export async function salvarRegraComissao(
   slug: string,
@@ -12,6 +13,7 @@ export async function salvarRegraComissao(
 ) {
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return;
+  exigirRecurso(empresa, "comissoes");
 
   const supabase = await createSupabaseServerClient();
   await supabase
@@ -36,6 +38,7 @@ export async function lancarComissaoManual(
 ) {
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return;
+  exigirRecurso(empresa, "comissoes");
 
   const supabase = await createSupabaseServerClient();
   await supabase.from("comissoes").insert({

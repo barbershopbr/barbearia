@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { createEmpresa } from "./actions";
+import { PLANOS_SAAS } from "@/lib/plano/recursos";
+import type { PlanoSaas } from "@/lib/supabase/types";
 
 export function NovaEmpresaDialog() {
   const [open, setOpen] = useState(false);
@@ -37,6 +39,21 @@ export function NovaEmpresaDialog() {
           <div className="space-y-2">
             <Label htmlFor="slug">Subdomínio (slug)</Label>
             <Input id="slug" name="slug" placeholder="ex.: elite-barber" required pattern="[a-z0-9]+(-[a-z0-9]+)*" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="plano_saas">Plano</Label>
+            <select
+              id="plano_saas"
+              name="plano_saas"
+              defaultValue="basico"
+              className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              {(Object.keys(PLANOS_SAAS) as PlanoSaas[]).map((p) => (
+                <option key={p} value={p}>
+                  {PLANOS_SAAS[p].nome} — R$ {PLANOS_SAAS[p].preco}/mês
+                </option>
+              ))}
+            </select>
           </div>
 
           <Separator />

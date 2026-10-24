@@ -4,6 +4,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import type { FidelidadeConfig } from "@/lib/supabase/types";
 import { ConfigFidelidadeForm } from "./config-form";
 import { AjustePontosDialog } from "./ajuste-pontos";
+import { temRecurso } from "@/lib/plano/recursos";
+import { RecursoBloqueado } from "@/components/recurso-bloqueado";
 
 type PontoLinha = { cliente_id: string; pontos: number; tipo: "credito" | "debito" };
 
@@ -11,6 +13,7 @@ export default async function FidelidadePage({ params }: { params: Promise<{ slu
   const { slug } = await params;
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return null;
+  if (!temRecurso(empresa, "fidelidade")) return <RecursoBloqueado recurso="fidelidade" />;
 
   const supabase = await createSupabaseServerClient();
   const [{ data: config }, { data: clientes }, { data: pontos }] = await Promise.all([

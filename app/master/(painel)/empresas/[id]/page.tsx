@@ -2,12 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import { requireMaster } from "@/lib/auth/current-master";
-import { rootDomain } from "@/lib/tenant/domain";
+import { tenantOrigin, tenantLabel } from "@/lib/tenant/domain";
 import { masterBasePath } from "@/lib/tenant/master-base-path";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DominioConfigForm } from "@/components/dominio-config-form";
 import { EmpresaStatusSelect } from "../../empresa-status-select";
 import { EmpresaDetailForm } from "./empresa-detail-form";
+import { PlanoForm } from "./plano-form";
 import { configurarDominioEmpresa, verificarDominioEmpresa, removerDominioEmpresa } from "./actions";
 
 export default async function EmpresaDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -47,12 +48,12 @@ export default async function EmpresaDetailPage({ params }: { params: Promise<{ 
           <Link href={base === "" ? "/" : base} className="text-xs text-muted-foreground hover:underline">← Empresas</Link>
           <h1 className="font-heading text-xl font-bold tracking-wide uppercase">{empresa.nome}</h1>
           <a
-            href={`http://${empresa.slug}.${rootDomain()}`}
+            href={tenantOrigin(empresa.slug)}
             target="_blank"
             rel="noreferrer"
             className="text-sm text-muted-foreground underline"
           >
-            {empresa.slug}.{rootDomain()}
+            {tenantLabel(empresa.slug)}
           </a>
         </div>
         <EmpresaStatusSelect empresaId={empresa.id} status={empresa.status} />
@@ -70,6 +71,15 @@ export default async function EmpresaDetailPage({ params }: { params: Promise<{ 
           </Card>
         ))}
       </div>
+
+      <Card className="max-w-xl">
+        <CardHeader>
+          <CardTitle>Plano do SaaS</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PlanoForm empresa={empresa} />
+        </CardContent>
+      </Card>
 
       <Card className="max-w-xl">
         <CardHeader>

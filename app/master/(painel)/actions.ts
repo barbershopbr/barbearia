@@ -4,7 +4,8 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import { requireMaster } from "@/lib/auth/current-master";
 import { createStaffAccount } from "@/lib/auth/staff-management";
 import type { ActionState } from "../../sites/[slug]/area-cliente/actions";
-import type { EmpresaStatus } from "@/lib/supabase/types";
+import type { EmpresaStatus, PlanoSaas } from "@/lib/supabase/types";
+import { PLANOS_SAAS } from "@/lib/plano/recursos";
 
 const SLUG_REGEX = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -28,6 +29,7 @@ export async function createEmpresa(_prev: ActionState, formData: FormData): Pro
   const ownerNome = String(formData.get("owner_nome") ?? "").trim();
   const ownerEmail = String(formData.get("owner_email") ?? "").trim().toLowerCase();
   const ownerPassword = String(formData.get("owner_password") ?? "");
+  const plano = String(formData.get("plano_saas") ?? "basico") as PlanoSaas;
 
   if (!nome || !SLUG_REGEX.test(slug)) {
     return { error: "Nome obrigatório e slug deve conter apenas letras minúsculas, números e hífens." };
@@ -35,12 +37,13 @@ export async function createEmpresa(_prev: ActionState, formData: FormData): Pro
   if (!ownerNome || !ownerEmail || ownerPassword.length < 8) {
     return { error: "Preencha os dados do responsável (nome, e-mail, senha com 8+ caracteres)." };
   }
+  if (!(plano in PLANOS_SAAS)) return { error: "Plano inválido." };
 
   const admin = createSupabaseServiceRoleClient();
 
   const { data: empresa, error: empresaError } = await admin
     .from("empresas")
-    .insert({ nome, slug, horarios: HORARIOS_PADRAO })
+    .insert({ nome, slug, horarios: HORARIOS_PADRAO, plano_saas: plano })
     .select("id")
     .single();
 

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
+import { empresaTemRecurso } from "@/lib/plano/recursos";
 
 export type CupomValidado = {
   id: string;
@@ -25,6 +26,10 @@ export async function validarEComputarCupom(
 ): Promise<{ cupom?: CupomValidado; erro?: string }> {
   const cod = codigo.trim();
   if (!cod) return {};
+
+  if (!(await empresaTemRecurso(supabase, empresaId, "cupons"))) {
+    return { erro: "Esta barbearia não aceita cupons." };
+  }
 
   const { data, error } = await supabase.rpc("validar_cupom", {
     p_empresa_id: empresaId,

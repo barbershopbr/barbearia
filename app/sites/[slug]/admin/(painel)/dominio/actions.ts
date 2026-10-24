@@ -6,6 +6,7 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import { invalidateDomainCache } from "@/lib/tenant/domain";
 import { createCustomHostname, deleteCustomHostname, getCustomHostnameStatus, isCloudflareConfigured } from "@/lib/cloudflare/custom-hostnames";
 import type { ActionState } from "../../../area-cliente/actions";
+import { exigirRecurso } from "@/lib/plano/recursos";
 
 const DOMINIO_REGEX = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/;
 
@@ -22,6 +23,7 @@ function normalizarDominio(raw: string): string {
 async function requireOwnerOrAdmin(slug: string) {
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." as const };
+  exigirRecurso(empresa, "dominio_proprio");
 
   const staff = await getCurrentStaff(empresa.id);
   if (!staff || (staff.role !== "owner" && staff.role !== "admin")) {

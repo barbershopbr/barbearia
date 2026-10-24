@@ -4,13 +4,14 @@ import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import { getCurrentCliente } from "@/lib/auth/current-cliente";
 import { tenantBasePath } from "@/lib/tenant/base-path";
 import { SignOutButton } from "../sign-out-button";
+import { temRecurso, type Recurso } from "@/lib/plano/recursos";
 
-const NAV_ITEMS = [
+const NAV_ITEMS: { href: string; label: string; recurso?: Recurso }[] = [
   { href: "/area-cliente", label: "Início" },
   { href: "/area-cliente/historico", label: "Histórico" },
-  { href: "/area-cliente/produtos", label: "Produtos" },
+  { href: "/area-cliente/produtos", label: "Produtos", recurso: "loja" },
   { href: "/area-cliente/pagamentos", label: "Pagamentos" },
-  { href: "/area-cliente/fidelidade", label: "Fidelidade" },
+  { href: "/area-cliente/fidelidade", label: "Fidelidade", recurso: "fidelidade" },
 ];
 
 export default async function AreaClientePainelLayout({
@@ -39,7 +40,7 @@ export default async function AreaClientePainelLayout({
       </div>
 
       <nav className="flex flex-wrap gap-1 border-b pb-2">
-        {NAV_ITEMS.map((item) => (
+        {NAV_ITEMS.filter((item) => !item.recurso || temRecurso(empresa, item.recurso)).map((item) => (
           <Link
             key={item.href}
             href={`${base}${item.href}`}

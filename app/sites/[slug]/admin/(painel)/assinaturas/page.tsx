@@ -3,6 +3,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AssinaturaStatusSelect } from "./status-select";
 import type { AssinaturaStatus } from "@/lib/supabase/types";
+import { temRecurso } from "@/lib/plano/recursos";
+import { RecursoBloqueado } from "@/components/recurso-bloqueado";
 
 type AssinaturaLinha = {
   id: string;
@@ -16,6 +18,7 @@ export default async function AssinaturasPage({ params }: { params: Promise<{ sl
   const { slug } = await params;
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return null;
+  if (!temRecurso(empresa, "assinaturas")) return <RecursoBloqueado recurso="assinaturas" />;
 
   const supabase = await createSupabaseServerClient();
   const { data: assinaturas } = (await supabase

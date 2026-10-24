@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RegraRow } from "./regra-row";
 import { marcarComissaoPaga } from "./actions";
+import { temRecurso } from "@/lib/plano/recursos";
+import { RecursoBloqueado } from "@/components/recurso-bloqueado";
 
 type ComissaoLinha = {
   id: string;
@@ -19,6 +21,7 @@ export default async function ComissoesPage({ params }: { params: Promise<{ slug
   const { slug } = await params;
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return null;
+  if (!temRecurso(empresa, "comissoes")) return <RecursoBloqueado recurso="comissoes" />;
 
   const supabase = await createSupabaseServerClient();
 

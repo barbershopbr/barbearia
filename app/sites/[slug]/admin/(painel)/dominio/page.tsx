@@ -2,13 +2,16 @@ import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import { getCurrentStaff } from "@/lib/auth/current-staff";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DominioConfigForm } from "@/components/dominio-config-form";
-import { rootDomain } from "@/lib/tenant/domain";
+import { tenantLabel } from "@/lib/tenant/domain";
 import { configurarDominioTenant, verificarDominioTenant, removerDominioTenant } from "./actions";
+import { temRecurso } from "@/lib/plano/recursos";
+import { RecursoBloqueado } from "@/components/recurso-bloqueado";
 
 export default async function DominioPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return null;
+  if (!temRecurso(empresa, "dominio_proprio")) return <RecursoBloqueado recurso="dominio_proprio" />;
 
   const staff = await getCurrentStaff(empresa.id);
   const podeEditar = staff && (staff.role === "owner" || staff.role === "admin");
@@ -18,7 +21,7 @@ export default async function DominioPage({ params }: { params: Promise<{ slug: 
       <div>
         <h1 className="text-xl font-semibold">Domínio</h1>
         <p className="text-sm text-muted-foreground">
-          Endereço atual: <span className="font-medium">{slug}.{rootDomain()}</span>. Configure um domínio próprio
+          Endereço atual: <span className="font-medium">{tenantLabel(slug)}</span>. Configure um domínio próprio
           (ex.: {slug}.com.br) e ele passa a ser usado no lugar desse endereço.
         </p>
       </div>

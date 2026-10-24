@@ -3,10 +3,12 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentCliente } from "@/lib/auth/current-cliente";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
+import { temRecurso } from "@/lib/plano/recursos";
 
 export async function solicitarPlano(slug: string, planoId: string): Promise<{ error?: string; success?: string }> {
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
+  if (!temRecurso(empresa, "assinaturas")) return { error: "Esta barbearia não oferece planos de assinatura." };
 
   const cliente = await getCurrentCliente(empresa.id);
   if (!cliente) return { error: "Faça login para solicitar um plano." };

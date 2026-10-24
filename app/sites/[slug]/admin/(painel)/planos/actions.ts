@@ -4,10 +4,12 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import type { ActionState } from "../../../area-cliente/actions";
 import type { PlanoPeriodo } from "@/lib/supabase/types";
+import { exigirRecurso } from "@/lib/plano/recursos";
 
 export async function createPlano(slug: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
+  exigirRecurso(empresa, "assinaturas");
 
   const nome = String(formData.get("nome") ?? "").trim();
   const valor = Number(formData.get("valor") ?? 0);

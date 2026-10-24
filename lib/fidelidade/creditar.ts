@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
+import { empresaTemRecurso } from "@/lib/plano/recursos";
 
 /**
  * Credita pontos de fidelidade por um agendamento concluído, quando a empresa
@@ -12,6 +13,8 @@ export async function creditarPontosAgendamento(
   supabase: SupabaseClient<Database>,
   params: { empresaId: string; clienteId: string; agendamentoId: string },
 ) {
+  if (!(await empresaTemRecurso(supabase, params.empresaId, "fidelidade"))) return;
+
   const { data: config } = await supabase
     .from("fidelidade_config")
     .select("ativo, pontos_por_atendimento")
@@ -36,6 +39,8 @@ export async function creditarPontosPedido(
   supabase: SupabaseClient<Database>,
   params: { empresaId: string; clienteId: string; pedidoId: string; valor: number },
 ) {
+  if (!(await empresaTemRecurso(supabase, params.empresaId, "fidelidade"))) return;
+
   const { data: config } = await supabase
     .from("fidelidade_config")
     .select("ativo, pontos_por_real_produto")

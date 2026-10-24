@@ -3,10 +3,12 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import type { ActionState } from "../../../area-cliente/actions";
+import { exigirRecurso } from "@/lib/plano/recursos";
 
 export async function createCategoria(slug: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
+  exigirRecurso(empresa, "loja");
 
   const nome = String(formData.get("nome") ?? "").trim();
   if (!nome) return { error: "Informe o nome da categoria." };
@@ -21,6 +23,7 @@ export async function createCategoria(slug: string, _prev: ActionState, formData
 export async function createProduto(slug: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
+  exigirRecurso(empresa, "loja");
 
   const nome = String(formData.get("nome") ?? "").trim();
   const descricao = String(formData.get("descricao") ?? "").trim() || null;
@@ -91,6 +94,7 @@ export async function ajustarEstoque(
 export async function registrarEntradaEstoque(slug: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
+  exigirRecurso(empresa, "loja");
 
   const produtoId = String(formData.get("produto_id") ?? "");
   const quantidade = Number(formData.get("quantidade") ?? 0);

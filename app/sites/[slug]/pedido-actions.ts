@@ -5,6 +5,7 @@ import { getCurrentCliente } from "@/lib/auth/current-cliente";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import { validarEComputarCupom } from "@/lib/cupons/validar";
 import type { CartItem } from "@/lib/cart/cart-context";
+import { temRecurso } from "@/lib/plano/recursos";
 
 export async function criarPedido(
   slug: string,
@@ -15,6 +16,7 @@ export async function criarPedido(
 
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
+  if (!temRecurso(empresa, "loja")) return { error: "Esta barbearia não vende produtos online." };
 
   const cliente = await getCurrentCliente(empresa.id);
   if (!cliente) return { error: "Faça login para finalizar o pedido." };

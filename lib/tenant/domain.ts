@@ -13,14 +13,34 @@ export function rootDomain(): string {
     : process.env.NEXT_PUBLIC_ROOT_DOMAIN_DEV ?? "lvh.me:3000";
 }
 
+/**
+ * Origem fixa do app (ex.: https://usebrcontrol.conta.workers.dev) para o
+ * deploy provisório, antes de o DNS do domínio raiz apontar para o Worker.
+ * Quando definida, os links absolutos usam o modo por caminho
+ * (/sites/{slug}, /master) que o middleware já atende em qualquer host.
+ */
+function appOrigin(): string | null {
+  const origin = process.env.APP_ORIGIN?.trim();
+  return origin ? origin.replace(/\/+$/, "") : null;
+}
+
 /** URL de origem completa (com protocolo) do site de um tenant, para montar links absolutos (ex.: e-mail de reset de senha). */
 export function tenantOrigin(slug: string): string {
+  const fixed = appOrigin();
+  if (fixed) return `${fixed}/sites/${slug}`;
   const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
   return `${protocol}://${slug}.${rootDomain()}`;
 }
 
+/** Endereço do site do tenant para exibir na tela (sem protocolo). */
+export function tenantLabel(slug: string): string {
+  return tenantOrigin(slug).replace(/^https?:\/\//, "");
+}
+
 /** URL de origem completa do painel Master (subdomínio "master"). */
 export function masterOrigin(): string {
+  const fixed = appOrigin();
+  if (fixed) return `${fixed}/master`;
   const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
   return `${protocol}://master.${rootDomain()}`;
 }

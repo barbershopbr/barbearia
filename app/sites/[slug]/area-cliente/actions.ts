@@ -7,6 +7,8 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import { syntheticAuthEmail } from "@/lib/auth/cliente-identity";
 import { tenantOrigin } from "@/lib/tenant/domain";
 import { tenantBasePath } from "@/lib/tenant/base-path";
+import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
+import { sendEmail, emailLayout, escapeHtml } from "@/lib/email/send";
 
 export type ActionState = { error?: string; success?: string } | null;
 
@@ -114,10 +116,23 @@ export async function requestPasswordReset(slug: string, _prev: ActionState, for
 
   const resetLink = `${tenantOrigin(slug)}/area-cliente/redefinir-senha?token=${token}`;
 
-  // TODO: integrar um provedor de e-mail (ex.: Resend) e enviar `resetLink`
-  // para o e-mail real do cliente. Por enquanto, registramos no log do
-  // servidor para permitir testar o fluxo em desenvolvimento.
-  console.log(`[reset-senha] link para ${email} (${slug}): ${resetLink}`);
+  const empresa = await getEmpresaBySlug(slug);
+  const nomeEmpresa = empresa?.nome ?? "sua barbearia";
+
+  // Falha de envio não muda a resposta (não revela se o e-mail existe); o
+  // erro fica no log do servidor.
+  await sendEmail({
+    to: email,
+    fromName: empresa?.nome,
+    subject: `Redefinir sua senha — ${nomeEmpresa}`,
+    text: `Recebemos um pedido para redefinir sua senha em ${nomeEmpresa}.\n\nAbra o link abaixo (válido por 1 hora):\n${resetLink}\n\nSe não foi você, ignore este e-mail.`,
+    html: emailLayout({
+      titulo: "Redefinir sua senha",
+      corpo: `<p>Recebemos um pedido para redefinir sua senha na área do cliente de <strong>${escapeHtml(nomeEmpresa)}</strong>.</p>
+<p>O link vale por 1 hora. Se não foi você, é só ignorar este e-mail.</p>`,
+      botao: { texto: "Criar nova senha", url: resetLink },
+    }),
+  });
 
   return generic;
 }

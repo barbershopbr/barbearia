@@ -3,6 +3,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import type { ActionState } from "../../../area-cliente/actions";
+import { exigirRecurso } from "@/lib/plano/recursos";
 
 export async function salvarConfigFidelidade(
   slug: string,
@@ -11,6 +12,7 @@ export async function salvarConfigFidelidade(
 ): Promise<ActionState> {
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
+  exigirRecurso(empresa, "fidelidade");
 
   const ativo = formData.get("ativo") === "on";
   const pontosPorAtendimento = Number(formData.get("pontos_por_atendimento") ?? 0);
@@ -44,6 +46,7 @@ export async function salvarConfigFidelidade(
 export async function ajustarPontosCliente(slug: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
+  exigirRecurso(empresa, "fidelidade");
 
   const clienteId = String(formData.get("cliente_id") ?? "");
   const pontos = Number(formData.get("pontos") ?? 0);

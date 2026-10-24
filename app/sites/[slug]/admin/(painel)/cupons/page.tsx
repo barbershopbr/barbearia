@@ -5,11 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { NovoCupomDialog } from "./cupom-form";
 import { toggleCupomAtivo, deleteCupom } from "./actions";
+import { temRecurso } from "@/lib/plano/recursos";
+import { RecursoBloqueado } from "@/components/recurso-bloqueado";
 
 export default async function CuponsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return null;
+  if (!temRecurso(empresa, "cupons")) return <RecursoBloqueado recurso="cupons" />;
 
   const supabase = await createSupabaseServerClient();
   const [{ data: cupons }, { data: usos }] = await Promise.all([
