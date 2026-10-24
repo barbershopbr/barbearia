@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,11 +44,7 @@ function Campo({
 export function ConfiguracoesForm({ empresa }: { empresa: Empresa }) {
   const [state, formAction, pending] = useActionState(salvarConfiguracoes.bind(null, empresa.slug), null);
 
-  const cores = (empresa.cores ?? {}) as { primaria?: string; secundaria?: string };
   const horarios = (empresa.horarios ?? {}) as Record<string, Horario>;
-
-  const [primaria, setPrimaria] = useState(cores.primaria || "#171717");
-  const [secundaria, setSecundaria] = useState(cores.secundaria || "#404040");
 
   return (
     <form action={formAction} className="space-y-6">
@@ -60,71 +56,12 @@ export function ConfiguracoesForm({ empresa }: { empresa: Empresa }) {
           <Campo id="nome" label="Nome da barbearia">
             <Input id="nome" name="nome" defaultValue={empresa.nome} required />
           </Campo>
-          <Campo id="descricao" label="Descrição" hint="Aparece no topo do site público.">
+          <Campo id="descricao" label="Descrição" hint="Aparece no topo do site (se o título/subtítulo não forem personalizados em Aparência do site).">
             <Textarea id="descricao" name="descricao" defaultValue={empresa.descricao ?? ""} rows={3} />
           </Campo>
           <Campo id="cnpj" label="CNPJ">
             <Input id="cnpj" name="cnpj" defaultValue={empresa.cnpj ?? ""} placeholder="00.000.000/0000-00" />
           </Campo>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Imagens</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Campo id="logo_url" label="Logo (URL)" hint="Imagem quadrada. Cole o link de uma imagem já hospedada.">
-            <Input id="logo_url" name="logo_url" type="url" defaultValue={empresa.logo_url ?? ""} placeholder="https://..." />
-          </Campo>
-          <Campo id="banner_url" label="Banner (URL)" hint="Imagem larga usada como fundo do topo do site.">
-            <Input id="banner_url" name="banner_url" type="url" defaultValue={empresa.banner_url ?? ""} placeholder="https://..." />
-          </Campo>
-          <Campo id="favicon_url" label="Favicon (URL)">
-            <Input id="favicon_url" name="favicon_url" type="url" defaultValue={empresa.favicon_url ?? ""} placeholder="https://..." />
-          </Campo>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Cores do site</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Campo id="cor_primaria" label="Cor primária">
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={primaria}
-                  onChange={(e) => setPrimaria(e.target.value)}
-                  className="h-9 w-12 shrink-0 rounded border border-input bg-transparent"
-                  aria-label="Selecionar cor primária"
-                />
-                <Input id="cor_primaria" name="cor_primaria" value={primaria} onValueChange={setPrimaria} />
-              </div>
-            </Campo>
-            <Campo id="cor_secundaria" label="Cor secundária">
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={secundaria}
-                  onChange={(e) => setSecundaria(e.target.value)}
-                  className="h-9 w-12 shrink-0 rounded border border-input bg-transparent"
-                  aria-label="Selecionar cor secundária"
-                />
-                <Input id="cor_secundaria" name="cor_secundaria" value={secundaria} onValueChange={setSecundaria} />
-              </div>
-            </Campo>
-          </div>
-          <div className="flex overflow-hidden rounded-md border">
-            <div className="flex-1 p-4 text-center text-sm font-medium text-white" style={{ backgroundColor: primaria }}>
-              Primária
-            </div>
-            <div className="flex-1 p-4 text-center text-sm font-medium text-white" style={{ backgroundColor: secundaria }}>
-              Secundária
-            </div>
-          </div>
         </CardContent>
       </Card>
 

@@ -50,6 +50,7 @@ export type Empresa = Timestamps & {
   cnpj: string | null;
   plano_saas: PlanoSaas;
   recursos_extras: Record<string, boolean>;
+  site_config: Record<string, unknown>;
   updated_at: string;
 };
 
@@ -132,10 +133,32 @@ export type Produto = Timestamps & {
   estoque_atual: number;
   estoque_minimo: number;
   ativo: boolean;
+  foto_url: string | null;
 };
 
 /** Linha da view produtos_publicos (vitrine do site; sem custo/estoque). */
-export type ProdutoPublico = Pick<Produto, "id" | "empresa_id" | "categoria_id" | "nome" | "descricao" | "preco" | "ativo" | "created_at">;
+export type ProdutoPublico = Pick<Produto, "id" | "empresa_id" | "categoria_id" | "nome" | "descricao" | "preco" | "ativo" | "created_at" | "foto_url">;
+
+export type GaleriaFoto = Timestamps & {
+  id: string;
+  empresa_id: string;
+  url: string;
+  legenda: string | null;
+  ordem: number;
+};
+
+export type Promocao = Timestamps & {
+  id: string;
+  empresa_id: string;
+  titulo: string;
+  descricao: string | null;
+  imagem_url: string | null;
+  preco_de: number | null;
+  preco_por: number | null;
+  validade: string | null;
+  ativo: boolean;
+  ordem: number;
+};
 
 export type Fornecedor = Timestamps & {
   id: string;
@@ -328,6 +351,8 @@ export type Database = {
       pagamento_itens: TableDef<PagamentoItem>;
       cupom_usos: TableDef<CupomUso>;
       fidelidade_config: TableDef<FidelidadeConfig>;
+      galeria_fotos: TableDef<GaleriaFoto>;
+      promocoes: TableDef<Promocao>;
     };
     Views: {
       produtos_publicos: { Row: ProdutoPublico; Relationships: [] };

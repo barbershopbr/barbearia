@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { NovoPlanoDialog } from "./plano-form";
+import { PlanoDialog } from "./plano-form";
 import { togglePlanoAtivo, deletePlano } from "./actions";
 import { temRecurso } from "@/lib/plano/recursos";
 import { RecursoBloqueado } from "@/components/recurso-bloqueado";
@@ -25,7 +25,7 @@ export default async function PlanosPage({ params }: { params: Promise<{ slug: s
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Planos</h1>
-        <NovoPlanoDialog slug={slug} />
+        <PlanoDialog slug={slug} />
       </div>
 
       <Table>
@@ -50,6 +50,7 @@ export default async function PlanosPage({ params }: { params: Promise<{ slug: s
                 <Badge variant={p.ativo ? "default" : "secondary"}>{p.ativo ? "Ativo" : "Inativo"}</Badge>
               </TableCell>
               <TableCell className="flex justify-end gap-2">
+                <PlanoDialog slug={slug} plano={p} />
                 <form action={togglePlanoAtivo.bind(null, p.id, p.ativo)}>
                   <Button type="submit" size="sm" variant="outline">
                     {p.ativo ? "Desativar" : "Ativar"}

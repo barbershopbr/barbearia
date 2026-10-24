@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { NovoFuncionarioDialog } from "./funcionario-form";
+import { FuncionarioDialog } from "./funcionario-form";
 import { toggleFuncionarioAtivo, deleteFuncionario } from "./actions";
 
 export default async function FuncionariosPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -22,7 +22,7 @@ export default async function FuncionariosPage({ params }: { params: Promise<{ s
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Funcionários</h1>
-        <NovoFuncionarioDialog slug={slug} />
+        <FuncionarioDialog slug={slug} empresaId={empresa.id} />
       </div>
 
       <Table>
@@ -37,12 +37,19 @@ export default async function FuncionariosPage({ params }: { params: Promise<{ s
         <TableBody>
           {(funcionarios ?? []).map((f) => (
             <TableRow key={f.id}>
-              <TableCell>{f.nome}</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={f.foto_url || "/avatar-placeholder.svg"} alt="" className="size-8 rounded-full object-cover" />
+                  {f.nome}
+                </div>
+              </TableCell>
               <TableCell>{f.especialidades?.join(", ") || "—"}</TableCell>
               <TableCell>
                 <Badge variant={f.ativo ? "default" : "secondary"}>{f.ativo ? "Ativo" : "Inativo"}</Badge>
               </TableCell>
               <TableCell className="flex justify-end gap-2">
+                <FuncionarioDialog slug={slug} empresaId={empresa.id} funcionario={f} />
                 <form action={toggleFuncionarioAtivo.bind(null, f.id, f.ativo)}>
                   <Button type="submit" size="sm" variant="outline">
                     {f.ativo ? "Desativar" : "Ativar"}

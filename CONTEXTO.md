@@ -50,6 +50,15 @@ Claude Code via `CLAUDE.md`. O escopo completo do produto está em `ESCOPO.md`.
 - **Pendente:** `RESEND_API_KEY` (secret) e `EMAIL_FROM` com domínio verificado no
   Resend; mover DNS do domínio para a Cloudflare.
 
+## Site personalizável (2026-10-24)
+- Admin → **Aparência do site** (`/admin/site`): tema, logo/favicon/capa (upload),
+  cores, textos do topo, seções (ordem/visibilidade), galeria, promoções.
+  Config em `empresas.site_config` (ler sempre via `lerSiteConfig`, lib/site/config.ts).
+- Upload direto do navegador pro Storage (`components/image-upload.tsx`), pasta
+  `{empresa_id}/...`; policy só deixa staff da própria empresa gravar (testado).
+- Serviços, funcionários, produtos e planos agora têm **Editar**. Actions novas
+  chamam `refresh()` de `next/cache` (Next 16) para atualizar a tela.
+
 ## Próximos passos
 1. **Etapa 2 (Venda do SaaS)** do `ESCOPO.md`.
 

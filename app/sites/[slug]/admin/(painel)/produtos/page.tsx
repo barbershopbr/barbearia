@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { NovoProdutoDialog } from "./produto-form";
+import { ProdutoDialog } from "./produto-form";
 import { CategoriaQuickAdd } from "./categoria-quick-add";
 import { EstoqueAdjust } from "./estoque-adjust";
 import { EntradaEstoqueDialog } from "./entrada-estoque";
@@ -21,7 +21,7 @@ export default async function ProdutosPage({ params }: { params: Promise<{ slug:
   const [{ data: produtos }, { data: categorias }, { data: fornecedores }] = await Promise.all([
     supabase.from("produtos").select("*, categorias(nome)").eq("empresa_id", empresa.id).order("nome") as unknown as Promise<{
       data: Array<{
-        id: string; nome: string; preco: number; custo: number; estoque_atual: number; estoque_minimo: number; ativo: boolean; categorias: { nome: string } | null;
+        id: string; nome: string; descricao: string | null; categoria_id: string | null; foto_url: string | null; preco: number; custo: number; estoque_atual: number; estoque_minimo: number; ativo: boolean; categorias: { nome: string } | null;
       }> | null;
     }>,
     supabase.from("categorias").select("*").eq("empresa_id", empresa.id).order("nome"),
@@ -38,7 +38,7 @@ export default async function ProdutosPage({ params }: { params: Promise<{ slug:
             produtos={(produtos ?? []).map((p) => ({ id: p.id, nome: p.nome }))}
             fornecedores={fornecedores ?? []}
           />
-          <NovoProdutoDialog slug={slug} categorias={categorias ?? []} />
+          <ProdutoDialog slug={slug} empresaId={empresa.id} categorias={categorias ?? []} />
         </div>
       </div>
 
@@ -72,7 +72,15 @@ export default async function ProdutosPage({ params }: { params: Promise<{ slug:
         <TableBody>
           {(produtos ?? []).map((p) => (
             <TableRow key={p.id}>
-              <TableCell>{p.nome}</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  {p.foto_url && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={p.foto_url} alt="" className="size-8 rounded object-cover" />
+                  )}
+                  {p.nome}
+                </div>
+              </TableCell>
               <TableCell>{p.categorias?.nome ?? "—"}</TableCell>
               <TableCell>R$ {Number(p.preco).toFixed(2)}</TableCell>
               <TableCell>R$ {Number(p.custo).toFixed(2)}</TableCell>
@@ -88,6 +96,7 @@ export default async function ProdutosPage({ params }: { params: Promise<{ slug:
                 <Badge variant={p.ativo ? "default" : "secondary"}>{p.ativo ? "Ativo" : "Inativo"}</Badge>
               </TableCell>
               <TableCell className="flex justify-end gap-2">
+                <ProdutoDialog slug={slug} empresaId={empresa.id} categorias={categorias ?? []} produto={p} />
                 <form action={toggleProdutoAtivo.bind(null, p.id, p.ativo)}>
                   <Button type="submit" size="sm" variant="outline">
                     {p.ativo ? "Desativar" : "Ativar"}

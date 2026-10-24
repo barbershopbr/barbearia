@@ -7,10 +7,21 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { createProduto } from "./actions";
-import type { Categoria } from "@/lib/supabase/types";
+import { ImageUpload } from "@/components/image-upload";
+import { salvarProduto } from "./actions";
+import type { Categoria, Produto } from "@/lib/supabase/types";
 
-export function NovoProdutoDialog({ slug, categorias }: { slug: string; categorias: Categoria[] }) {
+export function ProdutoDialog({
+  slug,
+  empresaId,
+  categorias,
+  produto,
+}: {
+  slug: string;
+  empresaId: string;
+  categorias: Categoria[];
+  produto?: Pick<Produto, "id" | "nome" | "descricao" | "categoria_id" | "preco" | "custo" | "estoque_minimo" | "foto_url">;
+}) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,7 +29,7 @@ export function NovoProdutoDialog({ slug, categorias }: { slug: string; categori
   async function handleSubmit(formData: FormData) {
     setPending(true);
     setError(null);
-    const result = await createProduto(slug, null, formData);
+    const result = await salvarProduto(slug, produto?.id ?? null, null, formData);
     setPending(false);
     if (result?.error) setError(result.error);
     else setOpen(false);
@@ -26,24 +37,28 @@ export function NovoProdutoDialog({ slug, categorias }: { slug: string; categori
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button>Novo produto</Button>} />
+      <DialogTrigger render={produto ? <Button size="sm" variant="outline">Editar</Button> : <Button>Novo produto</Button>} />
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Novo produto</DialogTitle>
+          <DialogTitle>{produto ? "Editar produto" : "Novo produto"}</DialogTitle>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
           <div className="space-y-2">
+            <Label>Foto</Label>
+            <ImageUpload name="foto_url" empresaId={empresaId} pasta="produtos" defaultValue={produto?.foto_url} />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="nome">Nome</Label>
-            <Input id="nome" name="nome" required />
+            <Input id="nome" name="nome" defaultValue={produto?.nome} required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="descricao">Descrição</Label>
-            <Textarea id="descricao" name="descricao" />
+            <Textarea id="descricao" name="descricao" defaultValue={produto?.descricao ?? ""} />
           </div>
           {categorias.length > 0 && (
             <div className="space-y-2">
               <Label htmlFor="categoria_id">Categoria</Label>
-              <Select name="categoria_id">
+              <Select name="categoria_id" defaultValue={produto?.categoria_id ?? undefined}>
                 <SelectTrigger id="categoria_id"><SelectValue placeholder="Sem categoria" /></SelectTrigger>
                 <SelectContent>
                   {categorias.map((c) => (
@@ -56,21 +71,23 @@ export function NovoProdutoDialog({ slug, categorias }: { slug: string; categori
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="preco">Preço de venda (R$)</Label>
-              <Input id="preco" name="preco" type="number" step="0.01" min="0" required />
+              <Input id="preco" name="preco" type="number" step="0.01" min="0" defaultValue={produto?.preco} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="custo">Custo (R$)</Label>
-              <Input id="custo" name="custo" type="number" step="0.01" min="0" defaultValue={0} />
+              <Input id="custo" name="custo" type="number" step="0.01" min="0" defaultValue={produto?.custo ?? 0} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="estoque_atual">Estoque inicial</Label>
-              <Input id="estoque_atual" name="estoque_atual" type="number" min="0" defaultValue={0} />
-            </div>
+            {!produto && (
+              <div className="space-y-2">
+                <Label htmlFor="estoque_atual">Estoque inicial</Label>
+                <Input id="estoque_atual" name="estoque_atual" type="number" min="0" defaultValue={0} />
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="estoque_minimo">Estoque mínimo</Label>
-              <Input id="estoque_minimo" name="estoque_minimo" type="number" min="0" defaultValue={0} />
+              <Input id="estoque_minimo" name="estoque_minimo" type="number" min="0" defaultValue={produto?.estoque_minimo ?? 0} />
             </div>
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}

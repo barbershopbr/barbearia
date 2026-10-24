@@ -1,10 +1,17 @@
 "use server";
 
+import { refresh } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import type { ActionState } from "../../../area-cliente/actions";
 
-export async function createServico(slug: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+/** Cria (servicoId null) ou edita um serviço. */
+export async function salvarServico(
+  slug: string,
+  servicoId: string | null,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
 
@@ -16,17 +23,15 @@ export async function createServico(slug: string, _prev: ActionState, formData: 
   if (!nome || preco < 0 || duracao <= 0) return { error: "Preencha os dados corretamente." };
 
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.from("servicos").insert({
-    empresa_id: empresa.id,
-    nome,
-    descricao,
-    preco,
-    duracao_minutos: duracao,
-  });
+  const dados = { nome, descricao, preco, duracao_minutos: duracao };
+  const { error } = servicoId
+    ? await supabase.from("servicos").update(dados).eq("id", servicoId).eq("empresa_id", empresa.id)
+    : await supabase.from("servicos").insert({ ...dados, empresa_id: empresa.id });
 
-  if (error) return { error: "Não foi possível criar o serviço." };
+  if (error) return { error: "Não foi possível salvar o serviço." };
 
-  return { success: "Serviço criado." };
+  refresh();
+  return { success: "Serviço salvo." };
 }
 
 // Next.js já re-renderiza os Server Components da página atual depois que
@@ -36,9 +41,11 @@ export async function createServico(slug: string, _prev: ActionState, formData: 
 export async function toggleServicoAtivo(servicoId: string, ativo: boolean) {
   const supabase = await createSupabaseServerClient();
   await supabase.from("servicos").update({ ativo: !ativo }).eq("id", servicoId);
+  refresh();
 }
 
 export async function deleteServico(servicoId: string) {
   const supabase = await createSupabaseServerClient();
   await supabase.from("servicos").delete().eq("id", servicoId);
+  refresh();
 }

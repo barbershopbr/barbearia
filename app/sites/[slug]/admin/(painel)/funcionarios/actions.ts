@@ -1,10 +1,17 @@
 "use server";
 
+import { refresh } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import type { ActionState } from "../../../area-cliente/actions";
 
-export async function createFuncionario(slug: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+/** Cria (funcionarioId null) ou edita o perfil público de um funcionário. */
+export async function salvarFuncionario(
+  slug: string,
+  funcionarioId: string | null,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
 
@@ -19,25 +26,25 @@ export async function createFuncionario(slug: string, _prev: ActionState, formDa
   if (!nome) return { error: "Informe o nome." };
 
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.from("funcionarios").insert({
-    empresa_id: empresa.id,
-    nome,
-    bio,
-    foto_url: fotoUrl,
-    especialidades,
-  });
+  const dados = { nome, bio, foto_url: fotoUrl, especialidades };
+  const { error } = funcionarioId
+    ? await supabase.from("funcionarios").update(dados).eq("id", funcionarioId).eq("empresa_id", empresa.id)
+    : await supabase.from("funcionarios").insert({ ...dados, empresa_id: empresa.id });
 
-  if (error) return { error: "Não foi possível cadastrar o funcionário." };
+  if (error) return { error: "Não foi possível salvar o funcionário." };
 
-  return { success: "Funcionário cadastrado." };
+  refresh();
+  return { success: "Funcionário salvo." };
 }
 
 export async function toggleFuncionarioAtivo(funcionarioId: string, ativo: boolean) {
   const supabase = await createSupabaseServerClient();
   await supabase.from("funcionarios").update({ ativo: !ativo }).eq("id", funcionarioId);
+  refresh();
 }
 
 export async function deleteFuncionario(funcionarioId: string) {
   const supabase = await createSupabaseServerClient();
   await supabase.from("funcionarios").delete().eq("id", funcionarioId);
+  refresh();
 }

@@ -1,5 +1,6 @@
 "use server";
 
+import { refresh } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import type { ActionState } from "../../../area-cliente/actions";
@@ -20,7 +21,13 @@ export async function createCategoria(slug: string, _prev: ActionState, formData
   return { success: "Categoria criada." };
 }
 
-export async function createProduto(slug: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+/** Cria (produtoId null) ou edita um produto. Na edição o estoque atual não muda (tem ajuste/entrada próprios). */
+export async function salvarProduto(
+  slug: string,
+  produtoId: string | null,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
   exigirRecurso(empresa, "loja");
@@ -32,34 +39,32 @@ export async function createProduto(slug: string, _prev: ActionState, formData: 
   const estoqueInicial = Number(formData.get("estoque_atual") ?? 0);
   const estoqueMinimo = Number(formData.get("estoque_minimo") ?? 0);
   const categoriaId = String(formData.get("categoria_id") ?? "").trim() || null;
+  const fotoUrl = String(formData.get("foto_url") ?? "").trim() || null;
 
   if (!nome || preco < 0) return { error: "Preencha nome e preço corretamente." };
 
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.from("produtos").insert({
-    empresa_id: empresa.id,
-    nome,
-    descricao,
-    preco,
-    custo,
-    estoque_atual: estoqueInicial,
-    estoque_minimo: estoqueMinimo,
-    categoria_id: categoriaId,
-  });
+  const dados = { nome, descricao, preco, custo, estoque_minimo: estoqueMinimo, categoria_id: categoriaId, foto_url: fotoUrl };
+  const { error } = produtoId
+    ? await supabase.from("produtos").update(dados).eq("id", produtoId).eq("empresa_id", empresa.id)
+    : await supabase.from("produtos").insert({ ...dados, empresa_id: empresa.id, estoque_atual: estoqueInicial });
 
-  if (error) return { error: "Não foi possível criar o produto." };
+  if (error) return { error: "Não foi possível salvar o produto." };
 
-  return { success: "Produto criado." };
+  refresh();
+  return { success: "Produto salvo." };
 }
 
 export async function toggleProdutoAtivo(produtoId: string, ativo: boolean) {
   const supabase = await createSupabaseServerClient();
   await supabase.from("produtos").update({ ativo: !ativo }).eq("id", produtoId);
+  refresh();
 }
 
 export async function deleteProduto(produtoId: string) {
   const supabase = await createSupabaseServerClient();
   await supabase.from("produtos").delete().eq("id", produtoId);
+  refresh();
 }
 
 export async function ajustarEstoque(

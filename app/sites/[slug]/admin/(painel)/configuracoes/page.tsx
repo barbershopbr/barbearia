@@ -15,7 +15,7 @@ export default async function ConfiguracoesPage({ params }: { params: Promise<{ 
       <div>
         <h1 className="text-xl font-semibold">Configurações</h1>
         <p className="text-sm text-muted-foreground">
-          Identidade, cores, contato e horários da barbearia. As mudanças aparecem no site público na hora.
+          Dados, contato e horários da barbearia. Logo, fotos e cores ficam em Aparência do site. As mudanças aparecem no site público na hora.
         </p>
       </div>
 

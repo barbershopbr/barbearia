@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { NovoServicoDialog } from "./servico-form";
+import { ServicoDialog } from "./servico-form";
 import { toggleServicoAtivo, deleteServico } from "./actions";
 
 export default async function ServicosPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -22,7 +22,7 @@ export default async function ServicosPage({ params }: { params: Promise<{ slug:
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Serviços</h1>
-        <NovoServicoDialog slug={slug} />
+        <ServicoDialog slug={slug} />
       </div>
 
       <Table>
@@ -45,6 +45,7 @@ export default async function ServicosPage({ params }: { params: Promise<{ slug:
                 <Badge variant={s.ativo ? "default" : "secondary"}>{s.ativo ? "Ativo" : "Inativo"}</Badge>
               </TableCell>
               <TableCell className="flex justify-end gap-2">
+                <ServicoDialog slug={slug} servico={s} />
                 <form action={toggleServicoAtivo.bind(null, s.id, s.ativo)}>
                   <Button type="submit" size="sm" variant="outline">
                     {s.ativo ? "Desativar" : "Ativar"}

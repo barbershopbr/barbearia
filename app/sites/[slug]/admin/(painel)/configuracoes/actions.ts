@@ -48,13 +48,6 @@ export async function salvarConfiguracoes(
       nome,
       descricao: str("descricao"),
       cnpj: str("cnpj"),
-      logo_url: str("logo_url"),
-      banner_url: str("banner_url"),
-      favicon_url: str("favicon_url"),
-      cores: {
-        primaria: String(formData.get("cor_primaria") ?? "").trim() || "#171717",
-        secundaria: String(formData.get("cor_secundaria") ?? "").trim() || "#404040",
-      },
       endereco: str("endereco"),
       latitude: num("latitude"),
       longitude: num("longitude"),

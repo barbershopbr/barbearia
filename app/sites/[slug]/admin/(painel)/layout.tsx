@@ -24,6 +24,7 @@ const NAV_ITEMS: { href: string; label: string; recurso?: Recurso }[] = [
   { href: "/admin/comissoes", label: "Comissões", recurso: "comissoes" },
   { href: "/admin/financeiro", label: "Financeiro", recurso: "financeiro" },
   { href: "/admin/dominio", label: "Domínio", recurso: "dominio_proprio" },
+  { href: "/admin/site", label: "Aparência do site" },
   { href: "/admin/configuracoes", label: "Configurações" },
   { href: "/admin/meu-historico", label: "Meu Histórico" },
 ];

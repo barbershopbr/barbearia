@@ -36,10 +36,12 @@ Recursos são ligados/desligados por plano (feature flags por empresa). 🆕
 ---
 
 ## 2. Site de cada barbearia (`{slug}.usebrcontrol.com.br` ou domínio próprio)
-- 🆕 **Temas prontos** (3–4 layouts) escolhidos pelo gestor.
-- 🔧 Conteúdo editável pelo gestor: logo, banner, galeria (**upload de
-  imagens**, hoje só URL), serviços e preços, produtos com foto,
-  **promoções em destaque**, equipe, planos de assinatura, avaliações.
+- ✅ **Temas prontos** (Clássico, Moderno, Minimalista) escolhidos pelo gestor em Admin → Aparência do site.
+- ✅ Conteúdo editável pelo gestor: logo, favicon, capa, cores (principal,
+  secundária, destaque), textos do topo, ordem/visibilidade das seções,
+  galeria e **promoções em destaque** — tudo com **upload de imagens**
+  (Supabase Storage, bucket `midia`). Serviços, equipe (com foto), produtos
+  (com foto) e planos com criar/editar/excluir. 🆕 Avaliações.
 - ✅ Página "Entrar" separando cliente e equipe.
 - 🆕 **PWA**: instalável no celular com o logo da barbearia + push. Também
   funciona como site responsivo comum.
