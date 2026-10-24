@@ -36,6 +36,7 @@ const NAV_ITEMS: { href: string; label: string; recurso?: Recurso }[] = [
   { href: "/admin/pote", label: "Pote", recurso: "assinaturas" },
   { href: "/admin/caixa", label: "Caixa", recurso: "caixa" },
   { href: "/admin/financeiro", label: "Financeiro", recurso: "financeiro" },
+  { href: "/admin/relatorios", label: "Relatórios", recurso: "relatorios" },
   { href: "/admin/pagamentos", label: "Recebimentos" },
   { href: "/admin/notas-fiscais", label: "Notas fiscais" },
   { href: "/admin/dominio", label: "Domínio", recurso: "dominio_proprio" },

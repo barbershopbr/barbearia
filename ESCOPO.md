@@ -56,8 +56,8 @@ Recursos são ligados/desligados por plano (feature flags por empresa). 🆕
   da barbearia. Outros gateways no futuro.
 - 🆕 Sinal / pagamento antecipado no agendamento — opcional por barbearia.
 - ✅ Caixa / PDV no balcão (abrir/fechar caixa, venda de serviço + produto, cobrar atendimento da agenda, sangria/suprimento).
-- 🆕 Relatórios avançados (faturamento por período/barbeiro/serviço, ticket
-  médio, clientes sumidos, exportar Excel/PDF).
+- ✅ Relatórios avançados (faturamento por período/barbeiro/serviço/forma, ticket
+  médio, produtos, clientes sumidos, exportar Excel (CSV) e imprimir/PDF) — Premium.
 - 🆕 Várias unidades no mesmo login.
 - ✅ Folgas, férias e feriados (bloqueios por profissional ou barbearia inteira) e pausa diária (almoço) por dia da semana.
 - 🔧 Assinaturas de clientes: Pix, dinheiro ou cartão recorrente.

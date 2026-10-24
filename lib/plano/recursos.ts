@@ -17,6 +17,7 @@ export type Recurso =
   | "financeiro"
   | "assinaturas"
   | "caixa"
+  | "relatorios"
   | "dominio_proprio";
 
 export const PLANOS_SAAS: Record<PlanoSaas, { nome: string; preco: number }> = {
@@ -36,6 +37,7 @@ const PLANO_MINIMO: Record<Recurso, PlanoSaas> = {
   financeiro: "pro",
   assinaturas: "pro",
   caixa: "pro",
+  relatorios: "premium",
   dominio_proprio: "premium",
 };
 
@@ -47,6 +49,7 @@ export const RECURSO_LABEL: Record<Recurso, string> = {
   financeiro: "Financeiro",
   assinaturas: "Assinaturas de clientes",
   caixa: "Caixa / PDV",
+  relatorios: "Relatórios avançados",
   dominio_proprio: "Domínio próprio",
 };
 

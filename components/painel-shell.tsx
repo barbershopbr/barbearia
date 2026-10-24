@@ -29,7 +29,7 @@ export function PainelShell({ titulo, menu, children }: { titulo: string; menu: 
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
-      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-sidebar-border bg-sidebar px-4 py-3 text-sidebar-foreground md:hidden">
+      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-sidebar-border bg-sidebar px-4 py-3 text-sidebar-foreground md:hidden print:hidden">
         <button type="button" onClick={() => setAberto(true)} aria-label="Abrir menu" className="-ml-1 rounded p-1 hover:bg-sidebar-accent">
           <Menu className="size-5" />
         </button>
@@ -41,7 +41,7 @@ export function PainelShell({ titulo, menu, children }: { titulo: string; menu: 
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar p-4 text-sidebar-foreground transition-transform duration-200",
-          "md:sticky md:top-0 md:h-screen md:w-56 md:translate-x-0",
+          "md:sticky md:top-0 md:h-screen md:w-56 md:translate-x-0 print:hidden",
           aberto ? "translate-x-0" : "-translate-x-full",
         )}
       >
@@ -56,7 +56,7 @@ export function PainelShell({ titulo, menu, children }: { titulo: string; menu: 
         {menu}
       </aside>
 
-      <main className="min-w-0 flex-1 bg-background p-4 md:p-6">{children}</main>
+      <main className="min-w-0 flex-1 bg-background p-4 md:p-6 print:p-0">{children}</main>
     </div>
   );
 }

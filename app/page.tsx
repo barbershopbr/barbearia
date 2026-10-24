@@ -48,7 +48,7 @@ const PASSOS = [
 const RECURSOS_PLANO: Record<PlanoSaas, string[]> = {
   basico: ["Agenda online", "Site próprio com temas", "Clientes e histórico", "Serviços e equipe", "Logins para a equipe com permissões"],
   pro: ["Tudo do Básico", "Loja de produtos e estoque", "Planos de assinatura para clientes", "Comissões", "Financeiro", "Cupons de desconto", "Programa de fidelidade"],
-  premium: ["Tudo do Pro", "Domínio próprio (suabarbearia.com.br)", "Suporte prioritário"],
+  premium: ["Tudo do Pro", "Relatórios avançados com exportação", "Domínio próprio (suabarbearia.com.br)", "Suporte prioritário"],
 };
 
 const FAQ = [

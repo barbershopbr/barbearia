@@ -29,6 +29,7 @@ export const SECOES: { id: string; label: string }[] = [
   { id: "pote", label: "Pote das assinaturas" },
   { id: "caixa", label: "Caixa / PDV" },
   { id: "financeiro", label: "Financeiro" },
+  { id: "relatorios", label: "Relatórios" },
   { id: "pagamentos", label: "Recebimentos (Mercado Pago)" },
   { id: "notas-fiscais", label: "Notas fiscais (Bling)" },
   { id: "site", label: "Aparência do site" },
