@@ -5,7 +5,7 @@ Claude Code via `CLAUDE.md`. O escopo completo do produto está em `ESCOPO.md`.
 
 ## Estado do código (2026-10-24)
 - Next 16 + Supabase + OpenNext/Cloudflare. `npx tsc` passa sem erros.
-- Código parado desde 2026-08-30. **Repositório git ainda sem nenhum commit.**
+- Código de produto parado desde 2026-08-30; infra recriada em 2026-10-24 (ver abaixo).
 - Já existe: painel admin completo da barbearia, área do cliente, site público
   por tenant, Master básico (só cadastro/status das barbearias), 9 migrations
   com RLS.
@@ -24,9 +24,12 @@ Claude Code via `CLAUDE.md`. O escopo completo do produto está em `ESCOPO.md`.
 - Hospedagem: **Cloudflare**. Faltam **Mercado Pago** (etapa 2) e Resend (chave).
 
 ## Próximos passos
-1. GitHub: link do repo privado vazio + e-mail dos commits → `git init`, commit inicial, push
-   (incluir `Segurança.txt` no `.gitignore` antes).
-2. **Etapa 1 (Base)** do `ESCOPO.md`.
+1. **Etapa 1 (Base)** do `ESCOPO.md`.
+
+## Git
+- Repo privado: https://github.com/barbershopbr/barbearia (branch `main`), commit inicial em 2026-10-24.
+- Commits sempre como `barbershopbr <endrew.barbershop@gmail.com>`.
+- `.gitattributes` força LF; `Segurança.txt`, `.env*` e `.claude-contexto/` ficam fora do repo.
 
 ## Decisões de produto (resumo — detalhes em ESCOPO.md)
 - Landing de vendas do BarberControl com **ícone discreto no rodapé** para o login Master; remover a lista pública de barbearias.
