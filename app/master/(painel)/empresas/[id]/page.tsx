@@ -43,7 +43,7 @@ export default async function EmpresaDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <Link href={base === "" ? "/" : base} className="text-xs text-muted-foreground hover:underline">← Empresas</Link>
           <h1 className="font-heading text-xl font-bold tracking-wide uppercase">{empresa.nome}</h1>

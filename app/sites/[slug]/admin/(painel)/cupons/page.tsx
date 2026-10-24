@@ -29,7 +29,7 @@ export default async function CuponsPage({ params }: { params: Promise<{ slug: s
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">Cupons</h1>
           <p className="text-sm text-muted-foreground">
@@ -81,7 +81,7 @@ export default async function CuponsPage({ params }: { params: Promise<{ slug: s
                     <Badge variant="default">Ativo</Badge>
                   )}
                 </TableCell>
-                <TableCell className="flex justify-end gap-2">
+                <TableCell className="flex flex-wrap justify-end gap-2">
                   <form action={toggleCupomAtivo.bind(null, c.id, c.ativo)}>
                     <Button type="submit" size="sm" variant="outline">
                       {c.ativo ? "Desativar" : "Ativar"}

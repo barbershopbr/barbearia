@@ -23,7 +23,7 @@ export default async function PlanosPage({ params }: { params: Promise<{ slug: s
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">Planos</h1>
         <PlanoDialog slug={slug} />
       </div>
@@ -49,7 +49,7 @@ export default async function PlanosPage({ params }: { params: Promise<{ slug: s
               <TableCell>
                 <Badge variant={p.ativo ? "default" : "secondary"}>{p.ativo ? "Ativo" : "Inativo"}</Badge>
               </TableCell>
-              <TableCell className="flex justify-end gap-2">
+              <TableCell className="flex flex-wrap justify-end gap-2">
                 <PlanoDialog slug={slug} plano={p} />
                 <form action={togglePlanoAtivo.bind(null, p.id, p.ativo)}>
                   <Button type="submit" size="sm" variant="outline">

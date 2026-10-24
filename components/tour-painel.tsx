@@ -41,8 +41,16 @@ export function TourPainel({
   // Só os passos com alvo presente na tela (lido ao abrir).
   useEffect(() => {
     if (!aberto) return;
+    // No celular o menu fica numa gaveta fechada (fora da tela): esses passos
+    // são pulados e ficam só os de texto centralizado.
+    const naTela = (alvo: string) => {
+      const el = document.querySelector(`[data-tour="${alvo}"]`);
+      if (!el) return false;
+      const r = el.getBoundingClientRect();
+      return r.width > 0 && r.right > 0 && r.left < window.innerWidth;
+    };
     // eslint-disable-next-line react-hooks/set-state-in-effect -- depende do DOM já montado
-    setVisiveis(passos.filter((p) => !p.alvo || document.querySelector(`[data-tour="${p.alvo}"]`)));
+    setVisiveis(passos.filter((p) => !p.alvo || naTela(p.alvo)));
     setIndice(0);
   }, [aberto, passos]);
 

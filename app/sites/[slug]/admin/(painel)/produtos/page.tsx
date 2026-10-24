@@ -30,7 +30,7 @@ export default async function ProdutosPage({ params }: { params: Promise<{ slug:
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">Produtos</h1>
         <div className="flex gap-2">
           <EntradaEstoqueDialog
@@ -95,7 +95,7 @@ export default async function ProdutosPage({ params }: { params: Promise<{ slug:
               <TableCell>
                 <Badge variant={p.ativo ? "default" : "secondary"}>{p.ativo ? "Ativo" : "Inativo"}</Badge>
               </TableCell>
-              <TableCell className="flex justify-end gap-2">
+              <TableCell className="flex flex-wrap justify-end gap-2">
                 <ProdutoDialog slug={slug} empresaId={empresa.id} categorias={categorias ?? []} produto={p} />
                 <form action={toggleProdutoAtivo.bind(null, p.id, p.ativo)}>
                   <Button type="submit" size="sm" variant="outline">

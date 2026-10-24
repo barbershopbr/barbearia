@@ -25,7 +25,7 @@ export default async function FuncionariosPage({ params }: { params: Promise<{ s
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">Funcionários</h1>
         <FuncionarioDialog slug={slug} empresaId={empresa.id} />
       </div>
@@ -53,7 +53,7 @@ export default async function FuncionariosPage({ params }: { params: Promise<{ s
               <TableCell>
                 <Badge variant={f.ativo ? "default" : "secondary"}>{f.ativo ? "Ativo" : "Inativo"}</Badge>
               </TableCell>
-              <TableCell className="flex justify-end gap-2">
+              <TableCell className="flex flex-wrap justify-end gap-2">
                 <FuncionarioDialog slug={slug} empresaId={empresa.id} funcionario={f} />
                 <form action={toggleFuncionarioAtivo.bind(null, f.id, f.ativo)}>
                   <Button type="submit" size="sm" variant="outline">

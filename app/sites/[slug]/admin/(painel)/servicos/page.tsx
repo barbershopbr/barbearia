@@ -20,7 +20,7 @@ export default async function ServicosPage({ params }: { params: Promise<{ slug:
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">Serviços</h1>
         <ServicoDialog slug={slug} />
       </div>
@@ -44,7 +44,7 @@ export default async function ServicosPage({ params }: { params: Promise<{ slug:
               <TableCell>
                 <Badge variant={s.ativo ? "default" : "secondary"}>{s.ativo ? "Ativo" : "Inativo"}</Badge>
               </TableCell>
-              <TableCell className="flex justify-end gap-2">
+              <TableCell className="flex flex-wrap justify-end gap-2">
                 <ServicoDialog slug={slug} servico={s} />
                 <form action={toggleServicoAtivo.bind(null, s.id, s.ativo)}>
                   <Button type="submit" size="sm" variant="outline">
