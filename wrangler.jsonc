@@ -1,0 +1,31 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "usebrcontrol",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "usebrcontrol"
+    }
+  ],
+  // Cache de resolução domínio-próprio -> slug (lib/tenant/domain.ts). Criar
+  // com `wrangler kv namespace create TENANT_DOMAINS` e substituir o "id"
+  // abaixo pelo retornado (e o "preview_id" por um `wrangler kv namespace
+  // create TENANT_DOMAINS --preview`, para rodar `wrangler dev`/preview).
+  "kv_namespaces": [
+    {
+      "binding": "TENANT_DOMAINS",
+      "id": "81e88327b3204280aa664a0053f04c48",
+      "preview_id": "6a41055bf2ab4471aefb6ff19d3ae4f4"
+    }
+  ]
+}
