@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Empresa } from "@/lib/supabase/types";
 import { salvarConfiguracoes } from "./actions";
 
-type Horario = { abre?: string; fecha?: string; fechado?: boolean };
+type Horario = { abre?: string; fecha?: string; fechado?: boolean; pausa_inicio?: string; pausa_fim?: string };
 
 const DIAS: { key: string; label: string }[] = [
   { key: "segunda", label: "Segunda" },
@@ -123,6 +123,22 @@ export function ConfiguracoesForm({ empresa }: { empresa: Empresa }) {
                   defaultValue={h.fecha ?? "18:00"}
                   className="w-32"
                   aria-label={`${label} fecha`}
+                />
+                <span className="text-xs text-muted-foreground">pausa</span>
+                <Input
+                  name={`${key}_pausa_inicio`}
+                  type="time"
+                  defaultValue={h.pausa_inicio ?? ""}
+                  className="w-28"
+                  aria-label={`${label} início da pausa`}
+                />
+                <span className="text-muted-foreground">–</span>
+                <Input
+                  name={`${key}_pausa_fim`}
+                  type="time"
+                  defaultValue={h.pausa_fim ?? ""}
+                  className="w-28"
+                  aria-label={`${label} fim da pausa`}
                 />
               </div>
             );

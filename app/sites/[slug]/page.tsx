@@ -7,6 +7,7 @@ import { tenantBasePath } from "@/lib/tenant/base-path";
 import { temRecurso } from "@/lib/plano/recursos";
 import { lerSiteConfig, corTextoSobre, type SecaoSite, type TemaSite } from "@/lib/site/config";
 import type { Empresa } from "@/lib/supabase/types";
+import type { Horario } from "@/lib/agenda/available-slots";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -98,7 +99,7 @@ export default async function TenantHomePage({ params }: { params: Promise<{ slu
   // Seções que dependem do plano do SaaS somem do site quando o recurso não está liberado.
   const planos = temRecurso(empresa, "assinaturas") ? (planosTodos ?? []) : [];
   const produtos = temRecurso(empresa, "loja") ? (produtosTodos ?? []) : [];
-  const horarios = (empresa.horarios ?? {}) as Record<string, { abre?: string; fecha?: string; fechado?: boolean }>;
+  const horarios = (empresa.horarios ?? {}) as Record<string, Horario>;
 
   const titulo = config.hero.titulo || empresa.nome;
   const subtitulo = config.hero.subtitulo || empresa.descricao;
@@ -326,7 +327,13 @@ export default async function TenantHomePage({ params }: { params: Promise<{ slu
               return (
                 <li key={key} className="flex justify-between border-b border-border/50 py-1">
                   <span>{label}</span>
-                  <span>{h?.fechado || !h ? "Fechado" : `${h.abre} - ${h.fecha}`}</span>
+                  <span>
+                    {h?.fechado || !h
+                      ? "Fechado"
+                      : h.pausa_inicio && h.pausa_fim
+                        ? `${h.abre} - ${h.pausa_inicio} · ${h.pausa_fim} - ${h.fecha}`
+                        : `${h.abre} - ${h.fecha}`}
+                  </span>
                 </li>
               );
             })}

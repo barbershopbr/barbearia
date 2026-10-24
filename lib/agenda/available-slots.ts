@@ -2,7 +2,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
 import { brazilDayRangeUtc, utcIsoToBrazilMinutesOfDay } from "@/lib/tenant/timezone";
 
-export type Horario = { abre?: string; fecha?: string; fechado?: boolean };
+/** Funcionamento de um dia; pausa_inicio/pausa_fim = intervalo sem atendimento (ex.: almoço). */
+export type Horario = { abre?: string; fecha?: string; fechado?: boolean; pausa_inicio?: string; pausa_fim?: string };
 
 const DIA_SEMANA_KEYS = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"] as const;
 
@@ -67,7 +68,11 @@ export async function getAvailableSlots(
 
   const aberturaMin = horaParaMinutos(horario.abre);
   const fechamentoMin = horaParaMinutos(horario.fecha);
+  // Agendamentos + bloqueios (via RPC) + pausa diária configurada.
   const ocupados = await buscarOcupados(supabase, empresaId, funcionarioId, data);
+  if (horario.pausa_inicio && horario.pausa_fim && horario.pausa_fim > horario.pausa_inicio) {
+    ocupados.push({ inicio: horaParaMinutos(horario.pausa_inicio), fim: horaParaMinutos(horario.pausa_fim) });
+  }
 
   const slots: string[] = [];
   for (let inicio = aberturaMin; inicio + duracaoMinutos <= fechamentoMin; inicio += PASSO_MINUTOS) {

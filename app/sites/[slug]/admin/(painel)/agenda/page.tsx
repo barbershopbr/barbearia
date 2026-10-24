@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { NovoAgendamentoDialog } from "./agendamento-form";
 import { StatusSelect } from "./status-select";
+import { BloqueioDialog } from "./bloqueio-form";
+import { removerBloqueio } from "./bloqueio-actions";
 import type { AgendamentoStatus } from "@/lib/supabase/types";
 
 type AgendamentoLinha = {
@@ -62,12 +64,23 @@ export default async function AgendaPage({
     .order("data_hora_inicio");
   if (profissional) query = query.eq("funcionario_id", profissional);
 
-  const [{ data: agendamentosRaw }, { data: clientes }, { data: servicos }, { data: funcionarios }] = await Promise.all([
+  const [{ data: agendamentosRaw }, { data: clientes }, { data: servicos }, { data: funcionarios }, { data: bloqueios }] = await Promise.all([
     query as unknown as Promise<{ data: AgendamentoLinha[] | null }>,
     supabase.from("clientes").select("*").eq("empresa_id", empresa.id).order("nome"),
     supabase.from("servicos").select("*").eq("empresa_id", empresa.id).eq("ativo", true).order("nome"),
     supabase.from("funcionarios").select("*").eq("empresa_id", empresa.id).eq("ativo", true).order("nome"),
+    // Bloqueios a partir do dia exibido (folgas futuras ficam visíveis para a equipe toda).
+    supabase
+      .from("bloqueios_agenda")
+      .select("*")
+      .eq("empresa_id", empresa.id)
+      .gte("fim", inicio.toISOString())
+      .order("inicio")
+      .limit(30),
   ]);
+  const nomeProfissional = new Map((funcionarios ?? []).map((f) => [f.id, f.nome]));
+  const fmt = (iso: string) =>
+    new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
 
   const semPerfil = escopo.tipo === "propria" && !escopo.funcionarioId;
   const agendamentos = semPerfil ? [] : (agendamentosRaw ?? []);
@@ -91,9 +104,19 @@ export default async function AgendaPage({
             {escopo.tipo === "propria" ? "Seus atendimentos." : "Atendimentos de toda a equipe."}
           </p>
         </div>
-        {profissionaisAgendaveis.length > 0 && (
-          <NovoAgendamentoDialog slug={slug} clientes={clientes ?? []} servicos={servicos ?? []} funcionarios={profissionaisAgendaveis} />
-        )}
+        <div className="flex gap-2">
+          {profissionaisAgendaveis.length > 0 && (
+            <BloqueioDialog
+              slug={slug}
+              profissionais={profissionaisAgendaveis.map((f) => ({ id: f.id, nome: f.nome }))}
+              permiteBarbeariaToda={escopo.tipo === "equipe" && escopo.podeEditarEquipe}
+              diaInicial={dia}
+            />
+          )}
+          {profissionaisAgendaveis.length > 0 && (
+            <NovoAgendamentoDialog slug={slug} clientes={clientes ?? []} servicos={servicos ?? []} funcionarios={profissionaisAgendaveis} />
+          )}
+        </div>
       </div>
 
       {semPerfil && (
@@ -174,6 +197,41 @@ export default async function AgendaPage({
           )}
         </TableBody>
       </Table>
+
+      {(bloqueios ?? []).length > 0 && (
+        <div className="space-y-2">
+          <h2 className="text-sm font-semibold tracking-wide uppercase">Folgas e bloqueios</h2>
+          <div className="divide-y rounded-md border">
+            {(bloqueios ?? []).map((b) => {
+              const podeRemover =
+                b.funcionario_id === null
+                  ? escopo.tipo === "equipe" && escopo.podeEditarEquipe
+                  : escopo.tipo === "equipe"
+                    ? escopo.podeEditarEquipe
+                    : escopo.funcionarioId === b.funcionario_id;
+              return (
+                <div key={b.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
+                  <div>
+                    <span className="font-medium">{b.funcionario_id ? (nomeProfissional.get(b.funcionario_id) ?? "Profissional") : "Barbearia inteira"}</span>
+                    <span className="text-muted-foreground">
+                      {" "}
+                      · {fmt(b.inicio)} até {fmt(b.fim)}
+                      {b.motivo ? ` · ${b.motivo}` : ""}
+                    </span>
+                  </div>
+                  {podeRemover && (
+                    <form action={removerBloqueio.bind(null, b.id)}>
+                      <Button type="submit" size="sm" variant="ghost" className="text-destructive">
+                        Remover
+                      </Button>
+                    </form>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

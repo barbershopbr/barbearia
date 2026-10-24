@@ -59,7 +59,7 @@ Recursos são ligados/desligados por plano (feature flags por empresa). 🆕
 - 🆕 Relatórios avançados (faturamento por período/barbeiro/serviço, ticket
   médio, clientes sumidos, exportar Excel/PDF).
 - 🆕 Várias unidades no mesmo login.
-- 🆕 Folgas, férias, almoço por barbeiro e feriados.
+- ✅ Folgas, férias e feriados (bloqueios por profissional ou barbearia inteira) e pausa diária (almoço) por dia da semana.
 - 🔧 Assinaturas de clientes: Pix, dinheiro ou cartão recorrente.
 
 ### Comissões (configuradas pelo dono, por funcionário)

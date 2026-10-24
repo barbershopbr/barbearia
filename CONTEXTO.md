@@ -83,6 +83,11 @@ Claude Code via `CLAUDE.md`. O escopo completo do produto está em `ESCOPO.md`.
 - Landing de vendas em `/` e autocadastro em `/cadastro` (`lib/tenant/nova-empresa.ts`).
   Cobrança do plano ainda não entra no fluxo (depende do Mercado Pago).
 
+## Folgas e pausas (2026-10-24)
+- `bloqueios_agenda` (profissional ou barbearia inteira; RLS: própria agenda ou agenda-equipe) e
+  pausa diária em `empresas.horarios[dia].pausa_inicio/pausa_fim`. RPC `horarios_ocupados` inclui
+  bloqueios; `getAvailableSlots` desconta a pausa. Alpha com almoço 13–14 (dado do Booksy).
+
 ## Próximos passos
 1. **Etapa 2 (Venda do SaaS)** do `ESCOPO.md`.
 

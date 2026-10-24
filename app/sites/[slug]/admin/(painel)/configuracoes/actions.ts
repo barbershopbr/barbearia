@@ -3,6 +3,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import { whatsappBR } from "@/lib/tenant/nova-empresa";
+import type { Horario } from "@/lib/agenda/available-slots";
 import type { ActionState } from "../../../area-cliente/actions";
 import { exigirEdicao } from "@/lib/auth/exigir-permissao";
 
@@ -29,13 +30,18 @@ export async function salvarConfiguracoes(
     return Number.isFinite(n) ? n : null;
   };
 
-  const horarios: Record<string, { abre: string; fecha: string; fechado: boolean }> = {};
+  const horarios: Record<string, Horario> = {};
   for (const dia of DIAS) {
-    horarios[dia] = {
-      abre: String(formData.get(`${dia}_abre`) ?? "").trim() || "09:00",
-      fecha: String(formData.get(`${dia}_fecha`) ?? "").trim() || "18:00",
-      fechado: formData.get(`${dia}_fechado`) === "on",
-    };
+    const abre = String(formData.get(`${dia}_abre`) ?? "").trim() || "09:00";
+    const fecha = String(formData.get(`${dia}_fecha`) ?? "").trim() || "18:00";
+    const pausaInicio = String(formData.get(`${dia}_pausa_inicio`) ?? "").trim();
+    const pausaFim = String(formData.get(`${dia}_pausa_fim`) ?? "").trim();
+    horarios[dia] = { abre, fecha, fechado: formData.get(`${dia}_fechado`) === "on" };
+    // Pausa só vale se estiver inteira e dentro do expediente.
+    if (pausaInicio && pausaFim && pausaInicio < pausaFim && pausaInicio >= abre && pausaFim <= fecha) {
+      horarios[dia].pausa_inicio = pausaInicio;
+      horarios[dia].pausa_fim = pausaFim;
+    }
   }
 
   const supabase = await createSupabaseServerClient();
