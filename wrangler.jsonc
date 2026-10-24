@@ -20,8 +20,17 @@
     "NEXT_PUBLIC_SUPABASE_URL": "https://ifaqsuxxrinpgzfvqvva.supabase.co",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmYXFzdXh4cmlucGd6ZnZxdnZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4Mjg2MjksImV4cCI6MjEwODQwNDYyOX0.K1LtMvj-a9sBPfuzKT7ZVrsQ_8ew-TuEdY0E91oybMM",
     "NEXT_PUBLIC_ROOT_DOMAIN": "usebrcontrol.com.br",
-    "APP_ORIGIN": "https://usebrcontrol.usebrcontrol.workers.dev"
+    "APP_ORIGIN": "https://usebrcontrol.usebrcontrol.workers.dev",
+    "CLOUDFLARE_ZONE_ID": "6be51528bd1733ef8024d0e54cb06193"
   },
+  // Domínio raiz (marketing), master.* e {slug}.* — todos no mesmo Worker; o
+  // middleware decide pelo Host. DNS: registros A proxied (192.0.2.1) para o
+  // apex e para "*".
+  "workers_dev": true,
+  "routes": [
+    { "pattern": "usebrcontrol.com.br/*", "zone_name": "usebrcontrol.com.br" },
+    { "pattern": "*.usebrcontrol.com.br/*", "zone_name": "usebrcontrol.com.br" }
+  ],
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",
