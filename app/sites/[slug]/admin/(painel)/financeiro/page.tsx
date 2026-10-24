@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
+import { hojeNoBrasil, mesNoBrasil } from "@/lib/tenant/timezone";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,21 +10,34 @@ import { deleteDespesa } from "./actions";
 import { temRecurso } from "@/lib/plano/recursos";
 import { RecursoBloqueado } from "@/components/recurso-bloqueado";
 
-export default async function FinanceiroPage({ params }: { params: Promise<{ slug: string }> }) {
+function deslocarMes(mes: string, delta: number): string {
+  const [a, m] = mes.split("-").map(Number);
+  const d = new Date(Date.UTC(a, m - 1 + delta, 1));
+  return d.toISOString().slice(0, 7);
+}
+
+export default async function FinanceiroPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ mes?: string }>;
+}) {
   const { slug } = await params;
+  const { mes: mesParam } = await searchParams;
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return null;
   if (!temRecurso(empresa, "financeiro")) return <RecursoBloqueado recurso="financeiro" />;
 
   const supabase = await createSupabaseServerClient();
 
-  const agora = new Date();
-  const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
-  const fimMes = new Date(agora.getFullYear(), agora.getMonth() + 1, 0, 23, 59, 59);
-  const inicioMesStr = inicioMes.toISOString().slice(0, 10);
-  const fimMesStr = fimMes.toISOString().slice(0, 10);
+  // Mês no horário do Brasil (o Worker roda em UTC).
+  const mesAtual = hojeNoBrasil().slice(0, 7);
+  const mes = mesParam && /^\d{4}-\d{2}$/.test(mesParam) ? mesParam : mesAtual;
+  const { primeiroDia: inicioMesStr, ultimoDia: fimMesStr, inicio: inicioMes, fim: fimMes } = mesNoBrasil(`${mes}-01`);
+  const nomeMes = new Date(`${mes}-15T12:00:00Z`).toLocaleDateString("pt-BR", { month: "long", year: "numeric", timeZone: "UTC" });
 
-  const [{ data: agendamentosConcluidos }, { data: assinaturasAtivas }, { data: despesas }] = await Promise.all([
+  const [{ data: agendamentosConcluidos }, { data: assinaturasAtivas }, { data: despesas }, { data: vendasProdutos }] = await Promise.all([
     supabase
       .from("agendamentos")
       .select("id, desconto, servicos(preco)")
@@ -44,6 +59,14 @@ export default async function FinanceiroPage({ params }: { params: Promise<{ slu
       .gte("data", inicioMesStr)
       .lte("data", fimMesStr)
       .order("data", { ascending: false }),
+    // Pedido da loja conta como venda quando foi pago ou entregue (separado).
+    supabase
+      .from("pagamentos")
+      .select("valor, status, separado")
+      .eq("empresa_id", empresa.id)
+      .eq("tipo", "produto")
+      .gte("created_at", inicioMes.toISOString())
+      .lte("created_at", fimMes.toISOString()),
   ]);
 
   const receitaServicos = (agendamentosConcluidos ?? []).reduce(
@@ -52,12 +75,16 @@ export default async function FinanceiroPage({ params }: { params: Promise<{ slu
   );
   const receitaAssinaturas = (assinaturasAtivas ?? []).reduce((s, a) => s + Number(a.planos?.valor ?? 0), 0);
   const totalDespesas = (despesas ?? []).reduce((s, d) => s + Number(d.valor), 0);
-  const receitaTotal = receitaServicos + receitaAssinaturas;
+  const receitaProdutos = (vendasProdutos ?? [])
+    .filter((p) => p.status === "pago" || (p.separado && p.status !== "estornado" && p.status !== "falhou"))
+    .reduce((s, p) => s + Number(p.valor), 0);
+  const receitaTotal = receitaServicos + receitaAssinaturas + receitaProdutos;
   const saldo = receitaTotal - totalDespesas;
 
   const cards = [
     { label: "Receita de serviços (mês)", value: receitaServicos },
     { label: "Receita de assinaturas ativas", value: receitaAssinaturas },
+    { label: "Vendas de produtos (mês)", value: receitaProdutos },
     { label: "Despesas (mês)", value: -totalDespesas },
     { label: "Saldo do mês", value: saldo, destaque: true },
   ];
@@ -67,14 +94,18 @@ export default async function FinanceiroPage({ params }: { params: Promise<{ slu
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold">Financeiro</h1>
-          <p className="text-sm text-muted-foreground">
-            {inicioMes.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
-          </p>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Link href={`?mes=${deslocarMes(mes, -1)}`} className="hover:text-foreground" aria-label="Mês anterior">‹</Link>
+            <span className="capitalize">{nomeMes}</span>
+            {mes < mesAtual && (
+              <Link href={`?mes=${deslocarMes(mes, 1)}`} className="hover:text-foreground" aria-label="Próximo mês">›</Link>
+            )}
+          </div>
         </div>
         <NovaDespesaDialog slug={slug} />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {cards.map((c) => (
           <Card key={c.label}>
             <CardHeader>

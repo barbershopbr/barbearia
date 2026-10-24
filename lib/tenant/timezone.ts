@@ -33,3 +33,12 @@ export function brazilDayRangeUtc(data: string): { inicio: Date; fim: Date } {
 export function hojeNoBrasil(agora: Date = new Date()): string {
   return new Date(agora.getTime() - BRAZIL_UTC_OFFSET_HOURS * 3_600_000).toISOString().slice(0, 10);
 }
+
+/** Primeiro e último dia ("YYYY-MM-DD") do mês de uma data local, e o intervalo UTC correspondente. */
+export function mesNoBrasil(data: string = hojeNoBrasil()): { primeiroDia: string; ultimoDia: string; inicio: Date; fim: Date } {
+  const [ano, mes] = data.split("-").map(Number);
+  const primeiroDia = `${ano}-${String(mes).padStart(2, "0")}-01`;
+  const ultimo = new Date(Date.UTC(ano, mes, 0)).getUTCDate();
+  const ultimoDia = `${ano}-${String(mes).padStart(2, "0")}-${String(ultimo).padStart(2, "0")}`;
+  return { primeiroDia, ultimoDia, inicio: brazilDayRangeUtc(primeiroDia).inicio, fim: brazilDayRangeUtc(ultimoDia).fim };
+}
