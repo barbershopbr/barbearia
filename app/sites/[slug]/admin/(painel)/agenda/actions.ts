@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import { brazilDateTimeToUtc } from "@/lib/tenant/timezone";
-import { hasConflict } from "@/lib/agenda/available-slots";
+import { ERRO_HORARIO_OCUPADO, hasConflict } from "@/lib/agenda/available-slots";
 import { creditarPontosAgendamento } from "@/lib/fidelidade/creditar";
 import type { ActionState } from "../../../area-cliente/actions";
 import type { AgendamentoStatus } from "@/lib/supabase/types";
@@ -59,6 +59,7 @@ export async function createAgendamentoAdmin(slug: string, _prev: ActionState, f
     data_hora_fim: fim.toISOString(),
   });
 
+  if (error?.code === ERRO_HORARIO_OCUPADO) return { error: "Esse profissional já tem um agendamento nesse horário." };
   if (error) return { error: "Não foi possível criar o agendamento." };
 
   return { success: "Agendamento criado." };
@@ -79,12 +80,16 @@ export async function updateAgendamentoStatus(agendamentoId: string, status: Age
     throw new Error("Você só pode alterar atendimentos da sua própria agenda.");
   }
 
-  const { data: agendamento } = await supabase
+  const { data: agendamento, error: erroUpdate } = await supabase
     .from("agendamentos")
     .update({ status })
     .eq("id", agendamentoId)
     .select("empresa_id, cliente_id, funcionario_id, servico_id")
     .maybeSingle();
+  if (erroUpdate?.code === ERRO_HORARIO_OCUPADO) {
+    // Reativar um cancelado cujo horário já foi ocupado por outro atendimento.
+    throw new Error("Esse horário já foi ocupado por outro atendimento.");
+  }
 
   if (!agendamento || status !== "concluido") return;
 

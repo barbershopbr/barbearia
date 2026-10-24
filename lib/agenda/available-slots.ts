@@ -34,14 +34,14 @@ async function buscarOcupados(
   data: string,
 ) {
   const { inicio, fim } = brazilDayRangeUtc(data);
-  const { data: agendamentos } = await supabase
-    .from("agendamentos")
-    .select("data_hora_inicio, data_hora_fim")
-    .eq("empresa_id", empresaId)
-    .eq("funcionario_id", funcionarioId)
-    .neq("status", "cancelado")
-    .gte("data_hora_inicio", inicio.toISOString())
-    .lte("data_hora_inicio", fim.toISOString());
+  // Função SECURITY DEFINER: o cliente não enxerga agendamentos de outros
+  // clientes pela RLS, mas precisa saber quais horários já estão ocupados.
+  const { data: agendamentos } = await supabase.rpc("horarios_ocupados", {
+    p_empresa: empresaId,
+    p_funcionario: funcionarioId,
+    p_inicio: inicio.toISOString(),
+    p_fim: fim.toISOString(),
+  });
 
   return (agendamentos ?? []).map((a) => ({
     inicio: utcIsoToBrazilMinutesOfDay(a.data_hora_inicio),
@@ -79,21 +79,26 @@ export async function getAvailableSlots(
   return slots;
 }
 
-/** Confere, no momento de criar o agendamento, se o horário escolhido ainda está livre (defesa contra corrida entre duas reservas simultâneas). */
+/**
+ * Confere, no momento de criar o agendamento, se o horário escolhido ainda
+ * está livre. A garantia final contra duas reservas simultâneas é a
+ * constraint agendamentos_sem_sobreposicao (erro 23P01 no insert).
+ */
 export async function hasConflict(
   supabase: SupabaseClient<Database>,
   params: { empresaId: string; funcionarioId: string; inicioUtc: Date; fimUtc: Date },
 ): Promise<boolean> {
   const { empresaId, funcionarioId, inicioUtc, fimUtc } = params;
 
-  const { data: agendamentos } = await supabase
-    .from("agendamentos")
-    .select("data_hora_inicio, data_hora_fim")
-    .eq("empresa_id", empresaId)
-    .eq("funcionario_id", funcionarioId)
-    .neq("status", "cancelado")
-    .lt("data_hora_inicio", fimUtc.toISOString())
-    .gt("data_hora_fim", inicioUtc.toISOString());
+  const { data: agendamentos } = await supabase.rpc("horarios_ocupados", {
+    p_empresa: empresaId,
+    p_funcionario: funcionarioId,
+    p_inicio: inicioUtc.toISOString(),
+    p_fim: fimUtc.toISOString(),
+  });
 
   return (agendamentos ?? []).length > 0;
 }
+
+/** Código do Postgres para violação da constraint de exclusão (horário já ocupado). */
+export const ERRO_HORARIO_OCUPADO = "23P01";

@@ -7,7 +7,7 @@ Documento-guia do que o sistema terá quando estiver pronto. Legenda:
 
 ## 1. BarberControl (domínio raiz `usebrcontrol.com.br`)
 
-### Landing de vendas 🆕
+### Landing de vendas ✅ (cobrança no autocadastro: 🆕)
 - Apresentação, benefícios, demonstração e os 3 planos com preço.
 - **Autocadastro + pagamento:** a barbearia escolhe o plano, cria a conta,
   define o slug (subdomínio) e paga a assinatura recorrente → acesso liberado na hora.

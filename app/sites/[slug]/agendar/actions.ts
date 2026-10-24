@@ -6,9 +6,11 @@ import { getCurrentCliente } from "@/lib/auth/current-cliente";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import { tenantBasePath } from "@/lib/tenant/base-path";
 import { brazilDateTimeToUtc } from "@/lib/tenant/timezone";
-import { getAvailableSlots, hasConflict } from "@/lib/agenda/available-slots";
+import { ERRO_HORARIO_OCUPADO, getAvailableSlots, hasConflict } from "@/lib/agenda/available-slots";
 import { validarEComputarCupom } from "@/lib/cupons/validar";
 import type { ActionState } from "../area-cliente/actions";
+import type { AgendamentoStatus } from "@/lib/supabase/types";
+import { ANTECEDENCIA_MINIMA_HORAS, clientePodeAlterar } from "@/lib/agenda/regras-cliente";
 
 export async function listarHorariosDisponiveis(
   slug: string,
@@ -68,7 +70,29 @@ export async function createAgendamento(slug: string, empresaId: string, _prev: 
   if (Number.isNaN(inicio.getTime())) return { error: "Data/horário inválidos." };
   const fim = new Date(inicio.getTime() + servico.duracao_minutos * 60_000);
 
+  // Remarcar: libera o horário antigo antes de checar conflito (o novo pode
+  // se sobrepor a ele) e devolve o status original se algo der errado.
+  const remarcarId = String(formData.get("remarcar_id") ?? "").trim() || null;
+  let original: { id: string; status: AgendamentoStatus } | null = null;
+  if (remarcarId) {
+    const { data: antigo } = await supabase
+      .from("agendamentos")
+      .select("id, status, data_hora_inicio")
+      .eq("id", remarcarId)
+      .eq("cliente_id", cliente.id)
+      .maybeSingle();
+    if (!antigo || !clientePodeAlterar(antigo)) {
+      return { error: `Esse horário não pode mais ser remarcado (limite de ${ANTECEDENCIA_MINIMA_HORAS}h antes).` };
+    }
+    await supabase.from("agendamentos").update({ status: "cancelado" }).eq("id", antigo.id).eq("cliente_id", cliente.id);
+    original = { id: antigo.id, status: antigo.status };
+  }
+  const desfazerRemarcacao = async () => {
+    if (original) await supabase.from("agendamentos").update({ status: original.status }).eq("id", original.id);
+  };
+
   if (await hasConflict(supabase, { empresaId, funcionarioId, inicioUtc: inicio, fimUtc: fim })) {
+    await desfazerRemarcacao();
     return { error: "Esse horário acabou de ficar indisponível. Escolha outro." };
   }
 
@@ -79,7 +103,10 @@ export async function createAgendamento(slug: string, empresaId: string, _prev: 
     codigoCupom,
     Number(servico.preco),
   );
-  if (erroCupom) return { error: erroCupom };
+  if (erroCupom) {
+    await desfazerRemarcacao();
+    return { error: erroCupom };
+  }
 
   const { data: agendamento, error } = await supabase
     .from("agendamentos")
@@ -96,7 +123,15 @@ export async function createAgendamento(slug: string, empresaId: string, _prev: 
     .select("id")
     .single();
 
-  if (error || !agendamento) return { error: "Não foi possível criar o agendamento." };
+  if (error || !agendamento) {
+    await desfazerRemarcacao();
+    return {
+      error:
+        error?.code === ERRO_HORARIO_OCUPADO
+          ? "Esse horário acabou de ficar indisponível. Escolha outro."
+          : "Não foi possível criar o agendamento.",
+    };
+  }
 
   if (cupom) {
     await supabase.from("cupom_usos").insert({

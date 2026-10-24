@@ -362,6 +362,10 @@ export type Database = {
       auth_is_staff_of: { Args: { target_empresa_id: string }; Returns: boolean };
       auth_is_owner_or_admin_of: { Args: { target_empresa_id: string }; Returns: boolean };
       auth_is_master_admin: { Args: Record<string, never>; Returns: boolean };
+      horarios_ocupados: {
+        Args: { p_empresa: string; p_funcionario: string; p_inicio: string; p_fim: string };
+        Returns: { data_hora_inicio: string; data_hora_fim: string }[];
+      };
       validar_cupom: {
         Args: { p_empresa_id: string; p_codigo: string };
         Returns: { id: string | null; tipo_desconto: string | null; valor: number | null; motivo: string | null }[];

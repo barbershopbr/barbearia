@@ -232,6 +232,15 @@ export default async function TenantHomePage({ params }: { params: Promise<{ slu
                   />
                   <p className={tema === "minimal" ? "font-semibold" : "font-heading text-sm font-semibold tracking-wide uppercase"}>{f.nome}</p>
                   {f.bio && <p className="text-xs text-muted-foreground">{f.bio}</p>}
+                  {cta && (
+                    <Link
+                      href={`${base}/agendar?barbeiro=${f.id}`}
+                      className="inline-block pt-1 text-xs font-semibold tracking-wide uppercase underline-offset-4 hover:underline"
+                      style={{ color: corDestaque }}
+                    >
+                      Agendar com {f.nome.split(" ")[0]}
+                    </Link>
+                  )}
                   {f.especialidades?.length > 0 && (
                     <div className="flex flex-wrap justify-center gap-1">
                       {f.especialidades.map((e) => (

@@ -74,6 +74,15 @@ Claude Code via `CLAUDE.md`. O escopo completo do produto está em `ESCOPO.md`.
 - Concluir atendimento: pontos e comissão gerados com service role (após checar permissão).
 - Clientes: cadastro no balcão (com/sem e-mail), edição, busca, atendimentos/última visita.
 
+## Agenda do cliente (2026-10-24)
+- **Bug corrigido:** reserva dupla — disponibilidade lia agendamentos com a sessão do cliente
+  (RLS só mostra os dele). Agora RPC `horarios_ocupados` (definer, só intervalos) + constraint
+  `agendamentos_sem_sobreposicao` (exclude gist; erro 23P01 → mensagem amigável).
+- Cliente cancela/remarca até 2h antes (`lib/agenda/regras-cliente.ts`); remarcar libera o
+  horário antigo antes e devolve se falhar. `/agendar?barbeiro=&servico=&remarcar=`.
+- Landing de vendas em `/` e autocadastro em `/cadastro` (`lib/tenant/nova-empresa.ts`).
+  Cobrança do plano ainda não entra no fluxo (depende do Mercado Pago).
+
 ## Próximos passos
 1. **Etapa 2 (Venda do SaaS)** do `ESCOPO.md`.
 

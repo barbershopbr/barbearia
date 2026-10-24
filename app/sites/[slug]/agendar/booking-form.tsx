@@ -14,14 +14,20 @@ export function BookingForm({
   empresaId,
   servicos,
   funcionarios,
+  inicial,
+  remarcarId,
 }: {
   slug: string;
   empresaId: string;
   servicos: Servico[];
   funcionarios: Funcionario[];
+  /** Serviço/profissional já escolhidos (ex.: remarcar ou "agendar com este barbeiro"). */
+  inicial?: { servicoId?: string; funcionarioId?: string };
+  /** Ao remarcar: o agendamento antigo é cancelado quando o novo for confirmado. */
+  remarcarId?: string;
 }) {
-  const [servicoId, setServicoId] = useState("");
-  const [funcionarioId, setFuncionarioId] = useState("");
+  const [servicoId, setServicoId] = useState(inicial?.servicoId ?? "");
+  const [funcionarioId, setFuncionarioId] = useState(inicial?.funcionarioId ?? "");
   const [data, setData] = useState("");
   const [hora, setHora] = useState("");
 
@@ -85,6 +91,7 @@ export function BookingForm({
       formData.set("data", data);
       formData.set("hora", hora);
       formData.set("codigo_cupom", cupomAplicado?.codigo ?? "");
+      if (remarcarId) formData.set("remarcar_id", remarcarId);
       const result = await createAgendamento(slug, empresaId, null, formData);
       if (result?.error) setError(result.error);
     });
