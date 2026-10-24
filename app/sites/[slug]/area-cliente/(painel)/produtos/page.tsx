@@ -10,10 +10,9 @@ export default async function ProdutosClientePage({ params }: { params: Promise<
 
   const supabase = await createSupabaseServerClient();
   const { data: produtos } = await supabase
-    .from("produtos")
+    .from("produtos_publicos")
     .select("*")
     .eq("empresa_id", empresa.id)
-    .eq("ativo", true)
     .order("nome");
 
   return (

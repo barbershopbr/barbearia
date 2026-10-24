@@ -26,7 +26,7 @@ export async function criarPedido(
   const supabase = await createSupabaseServerClient();
   const produtoIds = itens.map((i) => i.produtoId);
   const { data: produtos } = await supabase
-    .from("produtos")
+    .from("produtos_publicos")
     .select("id, preco, ativo")
     .eq("empresa_id", empresa.id)
     .in("id", produtoIds);

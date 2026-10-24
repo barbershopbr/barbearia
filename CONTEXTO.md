@@ -33,6 +33,16 @@ Claude Code via `CLAUDE.md`. O escopo completo do produto está em `ESCOPO.md`.
 - Contas de teste: Master `endrew.barbershop@gmail.com`; barbearia `barbearia-teste`
   (Premium) com dono `endrew.barbershop+teste@gmail.com`. Senhas passadas no chat.
 
+## Primeira barbearia real: Alpha Barbershop (2026-10-24)
+- Slug `alpha` (Premium), Sorocaba. Dados reais vindos do Booksy
+  (booksy.com/pt-br/333971_alpha-barbershop...): endereço, serviços/preços,
+  barbeiros Ibson Calebe e Diego Alencar. Instagram `_alpha_barbershop_`.
+- **Provisório, trocar:** login do dono (`endrew.barbershop+alpha@gmail.com`),
+  banner (Unsplash), produtos "(exemplo)", plano "Assinatura Alpha" R$99,90,
+  horários seg–sáb 09–18 (Booksy mostra almoço 13–14; agenda ainda não tem pausa),
+  sem logo/telefone.
+- O sistema de assinatura deles hoje: serviços R$1 "para assinantes" no Booksy.
+
 ## Etapa 1 (Base) — feito
 - Plano do SaaS por empresa (`plano_saas` + `recursos_extras`), mapa em
   `lib/plano/recursos.ts`; Master escolhe plano e exceções.

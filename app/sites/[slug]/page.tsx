@@ -45,7 +45,7 @@ export default async function TenantHomePage({ params }: { params: Promise<{ slu
     supabase.from("servicos").select("*").eq("empresa_id", empresa.id).eq("ativo", true).order("nome"),
     supabase.from("funcionarios").select("*").eq("empresa_id", empresa.id).eq("ativo", true).order("nome"),
     supabase.from("planos").select("*").eq("empresa_id", empresa.id).eq("ativo", true).order("valor"),
-    supabase.from("produtos").select("*").eq("empresa_id", empresa.id).eq("ativo", true).order("nome"),
+    supabase.from("produtos_publicos").select("*").eq("empresa_id", empresa.id).order("nome"),
   ]);
 
   // Seções que dependem do plano do SaaS somem do site quando o recurso não está liberado.

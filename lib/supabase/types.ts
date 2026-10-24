@@ -134,6 +134,9 @@ export type Produto = Timestamps & {
   ativo: boolean;
 };
 
+/** Linha da view produtos_publicos (vitrine do site; sem custo/estoque). */
+export type ProdutoPublico = Pick<Produto, "id" | "empresa_id" | "categoria_id" | "nome" | "descricao" | "preco" | "ativo" | "created_at">;
+
 export type Fornecedor = Timestamps & {
   id: string;
   empresa_id: string;
@@ -326,7 +329,9 @@ export type Database = {
       cupom_usos: TableDef<CupomUso>;
       fidelidade_config: TableDef<FidelidadeConfig>;
     };
-    Views: Record<string, never>;
+    Views: {
+      produtos_publicos: { Row: ProdutoPublico; Relationships: [] };
+    };
     Functions: {
       auth_empresa_ids: { Args: Record<string, never>; Returns: string[] };
       auth_is_staff_of: { Args: { target_empresa_id: string }; Returns: boolean };
