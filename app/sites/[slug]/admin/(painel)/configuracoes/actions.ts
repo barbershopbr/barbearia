@@ -2,6 +2,7 @@
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
+import { whatsappBR } from "@/lib/tenant/nova-empresa";
 import type { ActionState } from "../../../area-cliente/actions";
 import { exigirEdicao } from "@/lib/auth/exigir-permissao";
 
@@ -48,7 +49,7 @@ export async function salvarConfiguracoes(
       latitude: num("latitude"),
       longitude: num("longitude"),
       telefone: str("telefone"),
-      whatsapp: str("whatsapp"),
+      whatsapp: whatsappBR(String(formData.get("whatsapp") ?? "")),
       instagram: str("instagram"),
       horarios,
     })

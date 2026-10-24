@@ -2,24 +2,10 @@
 
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import { requireMaster } from "@/lib/auth/current-master";
-import { createStaffAccount } from "@/lib/auth/staff-management";
+import { criarEmpresaComResponsavel, SLUG_REGEX } from "@/lib/tenant/nova-empresa";
 import type { ActionState } from "../../sites/[slug]/area-cliente/actions";
 import type { EmpresaStatus, PlanoSaas } from "@/lib/supabase/types";
 import { PLANOS_SAAS } from "@/lib/plano/recursos";
-
-const SLUG_REGEX = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-
-// Horário padrão só para a barbearia já nascer com agenda funcionando — o dono
-// ajusta em Configurações depois.
-const HORARIOS_PADRAO = {
-  segunda: { abre: "09:00", fecha: "19:00", fechado: false },
-  terca: { abre: "09:00", fecha: "19:00", fechado: false },
-  quarta: { abre: "09:00", fecha: "19:00", fechado: false },
-  quinta: { abre: "09:00", fecha: "19:00", fechado: false },
-  sexta: { abre: "09:00", fecha: "19:00", fechado: false },
-  sabado: { abre: "09:00", fecha: "17:00", fechado: false },
-  domingo: { abre: "09:00", fecha: "13:00", fechado: true },
-};
 
 export async function createEmpresa(_prev: ActionState, formData: FormData): Promise<ActionState> {
   await requireMaster();
@@ -39,29 +25,13 @@ export async function createEmpresa(_prev: ActionState, formData: FormData): Pro
   }
   if (!(plano in PLANOS_SAAS)) return { error: "Plano inválido." };
 
-  const admin = createSupabaseServiceRoleClient();
-
-  const { data: empresa, error: empresaError } = await admin
-    .from("empresas")
-    .insert({ nome, slug, horarios: HORARIOS_PADRAO, plano_saas: plano })
-    .select("id")
-    .single();
-
-  if (empresaError || !empresa) {
-    return { error: "Não foi possível criar a empresa (slug já em uso?)." };
-  }
-
-  const staffResult = await createStaffAccount(empresa.id, {
-    nome: ownerNome,
-    email: ownerEmail,
-    password: ownerPassword,
-    role: "owner",
+  const resultado = await criarEmpresaComResponsavel({
+    nome,
+    slug,
+    plano,
+    responsavel: { nome: ownerNome, email: ownerEmail, password: ownerPassword },
   });
-
-  if (staffResult.error) {
-    await admin.from("empresas").delete().eq("id", empresa.id);
-    return { error: staffResult.error };
-  }
+  if ("error" in resultado) return { error: resultado.error };
 
   return { success: `Empresa "${nome}" criada em ${slug}.` };
 }
