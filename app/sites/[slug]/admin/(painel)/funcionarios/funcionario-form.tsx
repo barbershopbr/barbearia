@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +15,8 @@ export function FuncionarioDialog({ slug, empresaId, funcionario }: { slug: stri
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const pathname = usePathname();
 
   async function handleSubmit(formData: FormData) {
     setPending(true);
@@ -21,7 +24,11 @@ export function FuncionarioDialog({ slug, empresaId, funcionario }: { slug: stri
     const result = await salvarFuncionario(slug, funcionario?.id ?? null, null, formData);
     setPending(false);
     if (result?.error) setError(result.error);
-    else setOpen(false);
+    else {
+      setOpen(false);
+      // Novo funcionário: abre a ficha para completar dados, pagamento e permissões.
+      if (!funcionario && result?.id) router.push(`${pathname.replace(/\/$/, "")}/${result.id}`);
+    }
   }
 
   return (

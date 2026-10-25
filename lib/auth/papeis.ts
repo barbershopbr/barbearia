@@ -49,8 +49,9 @@ export const PERMISSOES_EXTRAS: { id: string; label: string }[] = [
 /** Tudo que aparece no diálogo de permissões, na ordem. */
 export const ITENS_PERMISSAO = [...SECOES.slice(0, 2), ...PERMISSOES_EXTRAS, ...SECOES.slice(2)];
 
-/** Sempre liberada: cada um vê os próprios atendimentos e comissões. */
+/** Sempre liberadas: cada um vê os próprios atendimentos/comissões e cuida da própria conta. */
 const SECAO_PESSOAL = "meu-historico";
+const SECOES_PESSOAIS = new Set([SECAO_PESSOAL, "minha-conta"]);
 
 export const PAPEL_LABEL: Record<UsuarioEmpresaRole, string> = {
   owner: "Responsável",
@@ -88,7 +89,7 @@ export function permissoesDe(staff: StaffPerm): Permissoes {
 }
 
 export function nivelSecao(staff: StaffPerm, secao: string): Nivel | null {
-  if (ehGestor(staff) || secao === SECAO_PESSOAL) return "editar";
+  if (ehGestor(staff) || SECOES_PESSOAIS.has(secao)) return "editar";
   return permissoesDe(staff)[secao] ?? null;
 }
 

@@ -12,7 +12,7 @@ export async function salvarFuncionario(
   funcionarioId: string | null,
   _prev: ActionState,
   formData: FormData,
-): Promise<ActionState> {
+): Promise<ActionState & { id?: string }> {
   await exigirEdicao("funcionarios");
   const empresa = await getEmpresaBySlug(slug);
   if (!empresa) return { error: "Empresa não encontrada." };
@@ -29,14 +29,14 @@ export async function salvarFuncionario(
 
   const supabase = await createSupabaseServerClient();
   const dados = { nome, bio, foto_url: fotoUrl, especialidades };
-  const { error } = funcionarioId
-    ? await supabase.from("funcionarios").update(dados).eq("id", funcionarioId).eq("empresa_id", empresa.id)
-    : await supabase.from("funcionarios").insert({ ...dados, empresa_id: empresa.id });
+  const { data: salvo, error } = funcionarioId
+    ? await supabase.from("funcionarios").update(dados).eq("id", funcionarioId).eq("empresa_id", empresa.id).select("id").single()
+    : await supabase.from("funcionarios").insert({ ...dados, empresa_id: empresa.id }).select("id").single();
 
-  if (error) return { error: "Não foi possível salvar o funcionário." };
+  if (error || !salvo) return { error: "Não foi possível salvar o funcionário." };
 
   refresh();
-  return { success: "Funcionário salvo." };
+  return { success: "Funcionário salvo.", id: salvo.id };
 }
 
 export async function toggleFuncionarioAtivo(funcionarioId: string, ativo: boolean) {

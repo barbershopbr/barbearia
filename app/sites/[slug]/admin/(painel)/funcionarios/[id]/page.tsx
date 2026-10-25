@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentStaff } from "@/lib/auth/current-staff";
-import { nivelSecao, podeAcessarSecao } from "@/lib/auth/papeis";
+import { ITENS_PERMISSAO, PAPEL_LABEL, nivelSecao, permissoesDe, podeAcessarSecao } from "@/lib/auth/papeis";
+import { AcessoAcoes, NovoAcessoDialog } from "../acesso-ui";
 import { tenantBasePath } from "@/lib/tenant/base-path";
 import { hojeNoBrasil, mesNoBrasil } from "@/lib/tenant/timezone";
 import { temRecurso } from "@/lib/plano/recursos";
@@ -59,6 +60,13 @@ export default async function FuncionarioDetalhePage({ params, searchParams }: {
       .lt("created_at", mes.fim.toISOString()),
     supabase.from("avaliacoes").select("nota").eq("funcionario_id", id),
   ]);
+
+  const { data: acesso } = funcionario.usuario_empresa_id
+    ? await supabase.from("usuarios_empresa").select("*").eq("id", funcionario.usuario_empresa_id).maybeSingle()
+    : { data: null };
+  const gestor = staff.role === "owner" || staff.role === "admin";
+  const permissoes = acesso ? permissoesDe(acesso) : null;
+  const NIVEL_LABEL = { ver: "só ver", editar: "ver e editar" } as const;
 
   const base = await tenantBasePath(slug);
   const podeEditar = nivelSecao(staff, "funcionarios") === "editar";
@@ -202,6 +210,43 @@ export default async function FuncionarioDetalhePage({ params, searchParams }: {
           )}
         </section>
       )}
+
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-sm font-semibold tracking-wide uppercase">Acesso ao painel e permissões</h2>
+          <p className="text-sm text-muted-foreground">Login de {funcionario.nome} no app da barbearia e o que ele pode ver ou alterar.</p>
+        </div>
+        {acesso ? (
+          <div className="space-y-3 rounded-lg border p-4">
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <span className="font-medium">{acesso.email}</span>
+              <Badge variant="outline">{PAPEL_LABEL[acesso.role]}</Badge>
+              <Badge variant={acesso.ativo ? "default" : "secondary"}>{acesso.ativo ? "Ativo" : "Bloqueado"}</Badge>
+            </div>
+            <ul className="grid gap-1 text-sm sm:grid-cols-2">
+              {ITENS_PERMISSAO.map((item) => {
+                const nivel = acesso.role === "owner" || acesso.role === "admin" ? "editar" : permissoes?.[item.id];
+                return (
+                  <li key={item.id} className={nivel ? "" : "text-muted-foreground line-through"}>
+                    {item.label}
+                    {nivel && <span className="text-muted-foreground"> — {NIVEL_LABEL[nivel]}</span>}
+                  </li>
+                );
+              })}
+            </ul>
+            {gestor && acesso.role !== "owner" && acesso.id !== staff.id && (
+              <AcessoAcoes slug={slug} usuarioEmpresaId={acesso.id} papel={acesso.role} ativo={acesso.ativo} permissoes={permissoes ?? {}} />
+            )}
+          </div>
+        ) : gestor ? (
+          <div className="flex flex-wrap items-center gap-3 rounded-lg border border-dashed p-4 text-sm">
+            <span className="text-muted-foreground">Ainda não tem login no painel.</span>
+            <NovoAcessoDialog slug={slug} funcionarios={[]} fixo={{ id: funcionario.id, nome: funcionario.nome }} />
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">Sem login no painel.</p>
+        )}
+      </section>
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold tracking-wide uppercase">Dados do funcionário</h2>

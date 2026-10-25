@@ -157,9 +157,9 @@ export default async function AdminPainelLayout({ children, params }: { children
           </div>
           <div className="mt-4 border-t border-sidebar-border pt-4">
             <p className="mb-1 text-xs text-sidebar-foreground/60">Plano {PLANOS_SAAS[empresa.plano_saas].nome}</p>
-            <p className="mb-2 text-xs text-sidebar-foreground/60">
-              {staff.nome} · {PAPEL_LABEL[staff.role]}
-            </p>
+            <a href={`${base}/admin/minha-conta`} data-tour="nav-minha-conta" className="mb-2 block text-xs text-sidebar-foreground/60 hover:underline">
+              {staff.nome} · {PAPEL_LABEL[staff.role]} · Minha conta
+            </a>
             <form action={signOutStaff.bind(null, slug)}>
               <Button
                 type="submit"

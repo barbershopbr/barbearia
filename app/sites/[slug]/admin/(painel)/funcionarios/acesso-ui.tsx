@@ -18,11 +18,12 @@ const DESCRICAO_PAPEL: Record<string, string> = {
   admin: "Vê e edita tudo, inclusive financeiro e configurações.",
 };
 
-export function NovoAcessoDialog({ slug, funcionarios }: { slug: string; funcionarios: { id: string; nome: string }[] }) {
+/** `fixo`: aberto na ficha de um funcionário — o acesso já nasce vinculado a ele. */
+export function NovoAcessoDialog({ slug, funcionarios, fixo }: { slug: string; funcionarios: { id: string; nome: string }[]; fixo?: { id: string; nome: string } }) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [msg, setMsg] = useState<{ erro?: string; ok?: string } | null>(null);
-  const [nome, setNome] = useState("");
+  const [nome, setNome] = useState(fixo?.nome ?? "");
   const [papel, setPapel] = useState<UsuarioEmpresaRole>("barbeiro");
 
   async function handleSubmit(formData: FormData) {
@@ -33,7 +34,7 @@ export function NovoAcessoDialog({ slug, funcionarios }: { slug: string; funcion
     if (r?.error) setMsg({ erro: r.error });
     else {
       setMsg({ ok: r?.success });
-      setNome("");
+      setNome(fixo?.nome ?? "");
     }
   }
 
@@ -45,13 +46,14 @@ export function NovoAcessoDialog({ slug, funcionarios }: { slug: string; funcion
         if (!o) setMsg(null);
       }}
     >
-      <DialogTrigger render={<Button>Dar acesso ao painel</Button>} />
+      <DialogTrigger render={<Button>{fixo ? "Criar login e permissões" : "Dar acesso ao painel"}</Button>} />
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Novo acesso ao painel</DialogTitle>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
-          {funcionarios.length > 0 && (
+          {fixo && <input type="hidden" name="funcionario_id" value={fixo.id} />}
+          {!fixo && funcionarios.length > 0 && (
             <div className="space-y-2">
               <Label htmlFor="funcionario_id">Funcionário (opcional)</Label>
               <select
