@@ -8,6 +8,9 @@ import { toggleFuncionarioAtivo, deleteFuncionario } from "./actions";
 import { getCurrentStaff } from "@/lib/auth/current-staff";
 import { PAPEL_LABEL, permissoesDe } from "@/lib/auth/papeis";
 import { AcessoAcoes, NovoAcessoDialog } from "./acesso-ui";
+import Link from "next/link";
+import { tenantBasePath } from "@/lib/tenant/base-path";
+import { CONTRATO_LABEL } from "@/lib/funcionarios/contrato";
 
 export default async function FuncionariosPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -15,11 +18,15 @@ export default async function FuncionariosPage({ params }: { params: Promise<{ s
   if (!empresa) return null;
 
   const supabase = await createSupabaseServerClient();
-  const [{ data: funcionarios }, { data: acessos }, staff] = await Promise.all([
+  const [{ data: funcionarios }, { data: acessos }, staff, { data: dadosInternos }, base] = await Promise.all([
     supabase.from("funcionarios").select("*").eq("empresa_id", empresa.id).order("nome"),
     supabase.from("usuarios_empresa").select("*").eq("empresa_id", empresa.id).order("nome"),
     getCurrentStaff(empresa.id),
+    supabase.from("funcionarios_dados").select("funcionario_id, cargo, tipo_contrato, salario_fixo").eq("empresa_id", empresa.id),
+    tenantBasePath(slug),
   ]);
+  const dadosDe = new Map((dadosInternos ?? []).map((d) => [d.funcionario_id, d]));
+  const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   const gestor = staff?.role === "owner" || staff?.role === "admin";
   const funcionarioDoAcesso = new Map((funcionarios ?? []).filter((f) => f.usuario_empresa_id).map((f) => [f.usuario_empresa_id, f.nome]));
 
@@ -34,7 +41,8 @@ export default async function FuncionariosPage({ params }: { params: Promise<{ s
         <TableHeader>
           <TableRow>
             <TableHead>Nome</TableHead>
-            <TableHead>Especialidades</TableHead>
+            <TableHead>Cargo / contrato</TableHead>
+            <TableHead>Salário fixo</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
@@ -46,14 +54,22 @@ export default async function FuncionariosPage({ params }: { params: Promise<{ s
                 <div className="flex items-center gap-2">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={f.foto_url || "/avatar-placeholder.svg"} alt="" className="size-8 rounded-full object-cover" />
-                  {f.nome}
+                  <Link href={`${base}/admin/funcionarios/${f.id}`} className="font-medium hover:underline">
+                    {f.nome}
+                  </Link>
                 </div>
               </TableCell>
-              <TableCell>{f.especialidades?.join(", ") || "—"}</TableCell>
+              <TableCell className="text-sm">
+                {[dadosDe.get(f.id)?.cargo, dadosDe.get(f.id)?.tipo_contrato && CONTRATO_LABEL[dadosDe.get(f.id)!.tipo_contrato!]].filter(Boolean).join(" · ") || "—"}
+              </TableCell>
+              <TableCell className="text-sm">{Number(dadosDe.get(f.id)?.salario_fixo ?? 0) > 0 ? brl(Number(dadosDe.get(f.id)!.salario_fixo)) : "—"}</TableCell>
               <TableCell>
                 <Badge variant={f.ativo ? "default" : "secondary"}>{f.ativo ? "Ativo" : "Inativo"}</Badge>
               </TableCell>
               <TableCell className="flex flex-wrap justify-end gap-2">
+                <Button size="sm" render={<Link href={`${base}/admin/funcionarios/${f.id}`} />}>
+                  Ficha e pagamento
+                </Button>
                 <FuncionarioDialog slug={slug} empresaId={empresa.id} funcionario={f} />
                 <form action={toggleFuncionarioAtivo.bind(null, f.id, f.ativo)}>
                   <Button type="submit" size="sm" variant="outline">
@@ -68,7 +84,7 @@ export default async function FuncionariosPage({ params }: { params: Promise<{ s
           ))}
           {(!funcionarios || funcionarios.length === 0) && (
             <TableRow>
-              <TableCell colSpan={4} className="text-center text-sm text-muted-foreground">
+              <TableCell colSpan={5} className="text-center text-sm text-muted-foreground">
                 Nenhum funcionário cadastrado.
               </TableCell>
             </TableRow>

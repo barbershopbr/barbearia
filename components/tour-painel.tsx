@@ -46,7 +46,9 @@ export function TourPainel({
     const naTela = (alvo: string) => {
       const el = document.querySelector(`[data-tour="${alvo}"]`);
       if (!el) return false;
-      const r = el.getBoundingClientRect();
+      // Item dentro de um grupo fechado do menu: vale a posição do título do grupo.
+      const grupo = el.closest("details");
+      const r = (grupo && !grupo.open ? grupo.querySelector("summary") ?? el : el).getBoundingClientRect();
       return r.width > 0 && r.right > 0 && r.left < window.innerWidth;
     };
     // eslint-disable-next-line react-hooks/set-state-in-effect -- depende do DOM já montado
@@ -72,7 +74,10 @@ export function TourPainel({
 
   useLayoutEffect(() => {
     if (!aberto || !passo) return;
-    document.querySelector(`[data-tour="${passo.alvo}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" });
+    const alvoEl = document.querySelector(`[data-tour="${passo.alvo}"]`);
+    const grupo = alvoEl?.closest("details");
+    if (grupo) grupo.open = true;
+    alvoEl?.scrollIntoView({ block: "center", behavior: "smooth" });
     // Mede no próximo quadro e de novo depois da rolagem suave.
     const quadro = requestAnimationFrame(medir);
     const t = setTimeout(medir, 250);

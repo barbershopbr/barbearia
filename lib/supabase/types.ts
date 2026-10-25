@@ -109,6 +109,26 @@ export type Funcionario = Timestamps & {
   ativo: boolean;
 };
 
+export type TipoContrato = "clt" | "mei" | "autonomo" | "parceria" | "estagio" | "outro";
+
+/** Dados internos do funcionário (não públicos — `funcionarios` é lido pelo site). */
+export type FuncionarioDados = Timestamps & {
+  funcionario_id: string;
+  empresa_id: string;
+  telefone: string | null;
+  email: string | null;
+  cpf: string | null;
+  data_nascimento: string | null;
+  data_admissao: string | null;
+  cargo: string | null;
+  tipo_contrato: TipoContrato | null;
+  salario_fixo: number;
+  dia_pagamento: number | null;
+  chave_pix: string | null;
+  endereco: string | null;
+  observacoes: string | null;
+};
+
 export type Agendamento = Timestamps & {
   id: string;
   empresa_id: string;
@@ -520,6 +540,7 @@ export type Database = {
       configuracoes_gateway: TableDef<ConfiguracaoGateway>;
       cliente_password_reset_tokens: TableDef<ClientePasswordResetToken>;
       regras_comissao: TableDef<RegraComissao>;
+      funcionarios_dados: TableDef<FuncionarioDados>;
       despesas: TableDef<Despesa>;
       pagamento_itens: TableDef<PagamentoItem>;
       cupom_usos: TableDef<CupomUso>;

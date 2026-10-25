@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
 import { COOKIE_SUPORTE } from "@/lib/plataforma";
-import Link from "next/link";
 import { Scissors } from "lucide-react";
 import { getEmpresaBySlug } from "@/lib/tenant/get-empresa";
 import { getCurrentStaff } from "@/lib/auth/current-staff";
@@ -9,6 +8,7 @@ import { tenantBasePath } from "@/lib/tenant/base-path";
 import { marcarTutorialVisto, signOutStaff } from "../actions";
 import { TourPainel, BotaoVerTutorial } from "@/components/tour-painel";
 import { PainelShell } from "@/components/painel-shell";
+import { ICONES_GRUPO, MenuPainel } from "@/components/menu-painel";
 import { BotaoNotificacoes } from "@/components/botao-notificacoes";
 import { AvisoMensalidade, TelaBloqueio } from "@/components/aviso-mensalidade";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -19,31 +19,70 @@ import { Button } from "@/components/ui/button";
 import { PLANOS_SAAS, temRecurso, type Recurso } from "@/lib/plano/recursos";
 import { PAPEL_LABEL, nivelSecao, podeAcessarSecao, secaoDoCaminho, secaoInicial } from "@/lib/auth/papeis";
 
-const NAV_ITEMS: { href: string; label: string; recurso?: Recurso }[] = [
-  { href: "/admin", label: "Dashboard" },
-  { href: "/admin/agenda", label: "Agenda" },
-  { href: "/admin/clientes", label: "Clientes" },
-  { href: "/admin/avaliacoes", label: "Avaliações" },
-  { href: "/admin/servicos", label: "Serviços" },
-  { href: "/admin/funcionarios", label: "Funcionários" },
-  { href: "/admin/pedidos", label: "Pedidos", recurso: "loja" },
-  { href: "/admin/planos", label: "Planos", recurso: "assinaturas" },
-  { href: "/admin/assinaturas", label: "Assinaturas", recurso: "assinaturas" },
-  { href: "/admin/produtos", label: "Produtos", recurso: "loja" },
-  { href: "/admin/fornecedores", label: "Fornecedores", recurso: "loja" },
-  { href: "/admin/cupons", label: "Cupons", recurso: "cupons" },
-  { href: "/admin/fidelidade", label: "Fidelidade", recurso: "fidelidade" },
-  { href: "/admin/comissoes", label: "Comissões", recurso: "comissoes" },
-  { href: "/admin/pote", label: "Pote", recurso: "assinaturas" },
-  { href: "/admin/caixa", label: "Caixa", recurso: "caixa" },
-  { href: "/admin/financeiro", label: "Financeiro", recurso: "financeiro" },
-  { href: "/admin/relatorios", label: "Relatórios", recurso: "relatorios" },
-  { href: "/admin/pagamentos", label: "Recebimentos" },
-  { href: "/admin/notas-fiscais", label: "Notas fiscais" },
-  { href: "/admin/dominio", label: "Domínio", recurso: "dominio_proprio" },
-  { href: "/admin/site", label: "Aparência do site" },
-  { href: "/admin/configuracoes", label: "Configurações" },
-  { href: "/admin/meu-historico", label: "Meu Histórico" },
+type Item = { href: string; label: string; recurso?: Recurso };
+
+// Menu por categoria. Toda página nova do admin entra aqui (e em SECOES de lib/auth/papeis.ts).
+const INICIO: Item = { href: "/admin", label: "Início" };
+const GRUPOS: { titulo: string; icone: keyof typeof ICONES_GRUPO; itens: Item[] }[] = [
+  {
+    titulo: "Atendimento",
+    icone: "CalendarDays",
+    itens: [
+      { href: "/admin/agenda", label: "Agenda" },
+      { href: "/admin/clientes", label: "Clientes" },
+      { href: "/admin/caixa", label: "Caixa", recurso: "caixa" },
+      { href: "/admin/avaliacoes", label: "Avaliações" },
+    ],
+  },
+  {
+    titulo: "Serviços e loja",
+    icone: "ShoppingBag",
+    itens: [
+      { href: "/admin/servicos", label: "Serviços" },
+      { href: "/admin/produtos", label: "Produtos", recurso: "loja" },
+      { href: "/admin/pedidos", label: "Pedidos da loja", recurso: "loja" },
+      { href: "/admin/fornecedores", label: "Fornecedores", recurso: "loja" },
+    ],
+  },
+  {
+    titulo: "Equipe",
+    icone: "Users",
+    itens: [
+      { href: "/admin/funcionarios", label: "Funcionários" },
+      { href: "/admin/comissoes", label: "Comissões", recurso: "comissoes" },
+      { href: "/admin/pote", label: "Pote das assinaturas", recurso: "assinaturas" },
+      { href: "/admin/meu-historico", label: "Meu histórico" },
+    ],
+  },
+  {
+    titulo: "Fidelização",
+    icone: "BadgePercent",
+    itens: [
+      { href: "/admin/planos", label: "Planos de assinatura", recurso: "assinaturas" },
+      { href: "/admin/assinaturas", label: "Assinantes", recurso: "assinaturas" },
+      { href: "/admin/cupons", label: "Cupons", recurso: "cupons" },
+      { href: "/admin/fidelidade", label: "Fidelidade", recurso: "fidelidade" },
+    ],
+  },
+  {
+    titulo: "Financeiro",
+    icone: "Wallet",
+    itens: [
+      { href: "/admin/financeiro", label: "Resumo financeiro", recurso: "financeiro" },
+      { href: "/admin/relatorios", label: "Relatórios", recurso: "relatorios" },
+      { href: "/admin/pagamentos", label: "Recebimentos" },
+      { href: "/admin/notas-fiscais", label: "Notas fiscais" },
+    ],
+  },
+  {
+    titulo: "Minha barbearia",
+    icone: "Settings",
+    itens: [
+      { href: "/admin/site", label: "Aparência do site" },
+      { href: "/admin/configuracoes", label: "Configurações" },
+      { href: "/admin/dominio", label: "Domínio", recurso: "dominio_proprio" },
+    ],
+  },
 ];
 
 export default async function AdminPainelLayout({ children, params }: { children: React.ReactNode; params: Promise<{ slug: string }> }) {
@@ -64,9 +103,8 @@ export default async function AdminPainelLayout({ children, params }: { children
     redirect(`${base}/admin${destino ? `/${destino}` : ""}`);
   }
 
-  const itens = NAV_ITEMS.filter(
-    (item) => (!item.recurso || temRecurso(empresa, item.recurso)) && podeAcessarSecao(staff, item.href.replace(/^\/admin\/?/, "")),
-  );
+  const visivel = (item: Item) => (!item.recurso || temRecurso(empresa, item.recurso)) && podeAcessarSecao(staff, item.href.replace(/^\/admin\/?/, ""));
+  const grupos = GRUPOS.map((g) => ({ titulo: g.titulo, icone: ICONES_GRUPO[g.icone], itens: g.itens.filter(visivel) })).filter((g) => g.itens.length > 0);
 
   // Mensalidade do BarberControl: aviso para o responsável/admin e bloqueio.
   const gestor = staff.role === "owner" || staff.role === "admin";
@@ -103,18 +141,7 @@ export default async function AdminPainelLayout({ children, params }: { children
             <Scissors className="size-4 shrink-0" />
             <p className="font-heading truncate text-sm font-semibold tracking-wide uppercase">{empresa.nome}</p>
           </div>
-          <nav className="flex-1 space-y-1">
-            {itens.map((item) => (
-              <Link
-                key={item.href}
-                href={`${base}${item.href}`}
-                data-tour={`nav-${item.href.replace(/^\/admin\/?/, "") || "inicio"}`}
-                className="block rounded px-2 py-1.5 text-sm tracking-wide uppercase hover:bg-sidebar-accent"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <MenuPainel base={base} inicio={visivel(INICIO) ? INICIO : null} grupos={grupos} atual={secao} />
           <div className="mt-6 space-y-1 border-t border-sidebar-border pt-4">
             <a
               href={tenantOrigin(slug)}

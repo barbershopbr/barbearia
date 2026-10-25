@@ -66,6 +66,12 @@ Claude Code via `CLAUDE.md`. O escopo completo do produto está em `ESCOPO.md`.
   vincula ao perfil, troca senha/papel, bloqueia. **Permissões por pessoa e por seção**
   (sem acesso / ver / ver e editar) em `usuarios_empresa.permissions.secoes`; papel é só
   o modelo inicial (`lib/auth/papeis.ts`). Owner/admin sempre tudo.
+- **Ficha do funcionário** (2026-10-25) em `/admin/funcionarios/[id]`: contato, CPF, contrato,
+  salário fixo, dia de pagamento, Pix — tabela protegida `funcionarios_dados` (NUNCA em
+  `funcionarios`, que é pública). Mostra resumo do mês (atendimentos, faturado, comissões,
+  total a receber, avaliação) e "quanto recebe por serviço" + editor da regra de comissão.
+- **Menu do painel agrupado** por categoria (`GRUPOS` em `admin/(painel)/layout.tsx`,
+  `components/menu-painel.tsx`); o tutorial abre o grupo antes de destacar o item.
 - Aplicação: layout do admin (menu + redirect + aviso "só ver", via header `x-pathname`
   do middleware) e `exigirEdicao(secao)` no início de toda action de escrita do admin.
 - **RLS por permissão** (migration 20261024000004): funções `auth_staff_nivel`/`auth_staff_pode`

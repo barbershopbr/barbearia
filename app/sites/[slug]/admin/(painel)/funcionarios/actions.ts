@@ -52,3 +52,49 @@ export async function deleteFuncionario(funcionarioId: string) {
   await supabase.from("funcionarios").delete().eq("id", funcionarioId);
   refresh();
 }
+
+const TIPOS_CONTRATO = ["clt", "mei", "autonomo", "parceria", "estagio", "outro"] as const;
+
+/** Dados internos (contato, contrato, salário) — tabela protegida, fora do perfil público. */
+export async function salvarDadosFuncionario(slug: string, funcionarioId: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+  await exigirEdicao("funcionarios");
+  const empresa = await getEmpresaBySlug(slug);
+  if (!empresa) return { error: "Empresa não encontrada." };
+
+  const texto = (campo: string) => String(formData.get(campo) ?? "").trim() || null;
+  const data = (campo: string) => {
+    const v = texto(campo);
+    return v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null;
+  };
+  const salario = Number(String(formData.get("salario_fixo") ?? "0").replace(",", ".")) || 0;
+  const dia = Number(formData.get("dia_pagamento") ?? "") || null;
+  const contrato = texto("tipo_contrato");
+  if (salario < 0) return { error: "Salário inválido." };
+  if (dia !== null && (dia < 1 || dia > 31)) return { error: "Dia de pagamento deve ser de 1 a 31." };
+
+  const supabase = await createSupabaseServerClient();
+  // Confirma que o funcionário é desta barbearia antes de gravar.
+  const { data: func } = await supabase.from("funcionarios").select("id").eq("id", funcionarioId).eq("empresa_id", empresa.id).maybeSingle();
+  if (!func) return { error: "Funcionário não encontrado." };
+
+  const { error } = await supabase.from("funcionarios_dados").upsert({
+    funcionario_id: funcionarioId,
+    empresa_id: empresa.id,
+    telefone: texto("telefone"),
+    email: texto("email"),
+    cpf: texto("cpf"),
+    data_nascimento: data("data_nascimento"),
+    data_admissao: data("data_admissao"),
+    cargo: texto("cargo"),
+    tipo_contrato: TIPOS_CONTRATO.find((t) => t === contrato) ?? null,
+    salario_fixo: Math.round(salario * 100) / 100,
+    dia_pagamento: dia,
+    chave_pix: texto("chave_pix"),
+    endereco: texto("endereco"),
+    observacoes: texto("observacoes"),
+  });
+  if (error) return { error: "Não foi possível salvar os dados." };
+
+  refresh();
+  return { success: "Dados salvos." };
+}
